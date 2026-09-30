@@ -11,13 +11,17 @@
         "laravel/tinker": "^3.0"
     },
     "require-dev": {
+        "driftingly/rector-laravel": "^2.6",
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.12",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
         "laravel/pint": "^1.27",
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^5.2",
-        "pestphp/pest-plugin-laravel": "^5.0"
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "pestphp/pest-plugin-type-coverage": "^5.0",
+        "rector/rector": "^2.6"
     },
     "autoload": {
         "psr-4": {
@@ -44,9 +48,22 @@
             "Composer\\Config::disableProcessTimeout",
             "@php artisan dev"
         ],
+        "check": [
+            "@php artisan config:clear --ansi @no_additional_args",
+            "pint --test",
+            "rector process --dry-run",
+            "phpstan analyse",
+            "@putenv XDEBUG_MODE=coverage",
+            "pest --parallel --exclude-testsuite=Browser --coverage --min=90",
+            "pest --type-coverage --min=100"
+        ],
+        "fix": [
+            "rector process",
+            "pint"
+        ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
-            "@php artisan test"
+            "pest --parallel --exclude-testsuite=Browser"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

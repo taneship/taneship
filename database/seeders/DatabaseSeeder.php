@@ -8,5 +8,8 @@ use Illuminate\Database\Seeder;
 
 final class DatabaseSeeder extends Seeder
 {
-    public function run(): void {}
+    public function run(): void
+    {
+        // Foundation seeds nothing. Modules call their seeders here, and demo data only outside production.
+    }
 }
