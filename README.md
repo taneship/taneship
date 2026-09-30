@@ -1,58 +1,97 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Taneship
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel starter kit on Inertia and React, rendered on the server. Business logic lives in actions, static analysis runs at its highest level, architecture tests hold the structure in place, and the conventions are written for developers and coding agents alike.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.5, with PCOV or Xdebug for the coverage gate
+- Composer 2.10
+- Node.js 24, with npm 11.16 or later
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+No third-party key is needed: the application runs on SQLite, the database queue and the `log` mailer.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Create a project
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Create a repository from this template, with "Use this template" on GitHub or with the GitHub CLI:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+gh repo create my-app --template taneship/taneship --private --clone
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Then install and start it:
 
-## Contributing
+```bash
+cd my-app
+composer setup
+composer dev
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+The application answers on http://localhost:8000.
 
-## Code of Conduct
+The project starts from a single commit and owns every file from then on: change any of them. Taneship tags its releases `vX.Y.Z` on `main`, each with a [GitHub Release](https://github.com/taneship/taneship/releases) whose notes describe the changes and link to their diff. Take what you want from a release by hand.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Commands
 
-## Security Vulnerabilities
+```bash
+composer setup          # install dependencies, create .env, generate the key, migrate, seed demo data, build the client and server bundles
+composer dev            # run php artisan dev: web server, queue worker, log tail, and the Vite dev server, which also renders pages on the server
+composer check          # run the quality gates that need neither a browser nor the network
+composer fix            # apply the fixes the tools can make on their own
+composer test           # run the Pest suite in parallel, browser tests excluded
+composer test:browser   # build the bundles, start the SSR server, then run the browser tests
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+`npm install` installs the git hooks: before a commit, they fix the staged files, and on a commit they check its message. Set `VP_GIT_HOOKS=0` to turn them off.
 
-## License
+## Coding agents
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+[`AGENTS.md`](AGENTS.md) holds the conventions of the project: stack, structure, code style, testing and boundaries. Claude Code, Codex, Cursor, Copilot, Gemini CLI and Junie read it. Add your own conventions to it as the project grows.
+
+Claude Code reads `AGENTS.md` only while the project has no `CLAUDE.md`. If you add one, start it with this line, so that it keeps reading the conventions:
+
+```
+@AGENTS.md
+```
+
+[Laravel Boost](https://laravel.com/docs/boost) gives agents an MCP server that reads the application: routes, database schema, logs and documentation. Install its configuration, then approve the `laravel-boost` server in your agent:
+
+```bash
+php artisan boost:install --mcp
+```
+
+The files it generates are git-ignored, and `boost:install` creates them again on another machine.
+
+## Production
+
+Requirements: PHP 8.5, Node.js 24 for server-side rendering, and SQLite, PostgreSQL or MySQL.
+
+Build the application:
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci
+npm run build
+npm prune --omit=dev
+php artisan migrate --force
+php artisan optimize
+```
+
+`npm run build` builds the client bundle into `public/build` and the server bundle into `bootstrap/ssr`. The server bundle imports React and the other runtime packages from `node_modules`, which `npm prune --omit=dev` keeps.
+
+Serve `public/` through a web server that compresses its responses, such as nginx or Caddy, and supervise three processes:
+
+```bash
+php artisan inertia:start-ssr   # renders pages on the server. While it is down, pages render in the browser
+php artisan queue:work          # runs queued jobs
+php artisan schedule:work       # runs scheduled tasks, or run php artisan schedule:run every minute from cron
+```
+
+## Pro and Teams
+
+Taneship Pro and Taneship Teams start from this edition for applications that need more. [See what they add](https://github.com/taneship).
+
+## Contributing and security
+
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request. Report a vulnerability privately, as [`SECURITY.md`](SECURITY.md) describes.
+
+Taneship is open source under the MIT license.
