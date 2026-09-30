@@ -62,6 +62,7 @@
             "pest --type-coverage --min=100",
             "@php artisan wayfinder:generate --ansi",
             "npx vp check",
+            "@putenv LARAVEL_BYPASS_ENV_CHECK=1",
             "npx vp test"
         ],
         "fix": [
