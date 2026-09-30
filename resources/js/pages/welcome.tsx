@@ -13,7 +13,9 @@ export default function Welcome() {
             </Head>
             <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
                 <h1 className="text-4xl font-semibold">{name}</h1>
-                <p className="text-lg">{translate('foundation.welcome.description')}</p>
+                <p className="text-lg text-muted-foreground">
+                    {translate('foundation.welcome.description')}
+                </p>
             </main>
         </>
     );
