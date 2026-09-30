@@ -8,12 +8,15 @@
 /.codex
 /.cursor/
 /.idea
+/.junie
 /.lighthouseci
+/.mcp.json
 /.nova
 /.phpunit.cache
 /.vscode
 /.zed
 /auth.json
+/boost.json
 /bootstrap/ssr
 /node_modules
 /public/build
