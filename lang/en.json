@@ -7,5 +7,16 @@
     "foundation.sidebar.dashboard": "Dashboard",
     "foundation.dashboard.title": "Dashboard",
     "foundation.dashboard.empty.title": "Nothing here yet",
-    "foundation.dashboard.empty.description": "What your application builds will show up here."
+    "foundation.dashboard.empty.description": "What your application builds will show up here.",
+    "foundation.http_error.403.title": "Forbidden",
+    "foundation.http_error.403.description": "You are not allowed to see this page.",
+    "foundation.http_error.404.title": "Page not found",
+    "foundation.http_error.404.description": "This page does not exist, or it has moved.",
+    "foundation.http_error.429.title": "Too many requests",
+    "foundation.http_error.429.description": "You sent too many requests. Wait a moment, then try again.",
+    "foundation.http_error.500.title": "Server error",
+    "foundation.http_error.500.description": "Something went wrong on our side. Try again in a moment.",
+    "foundation.http_error.503.title": "Down for maintenance",
+    "foundation.http_error.503.description": "The application is being updated. Come back in a moment.",
+    "foundation.http_error.home": "Back to the home page"
 }

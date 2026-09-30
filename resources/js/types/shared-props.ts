@@ -8,8 +8,16 @@ export interface SharedProps {
     translations: Translations;
 }
 
+export type Toast = {
+    type: 'success' | 'error';
+    message: string;
+};
+
 declare module '@inertiajs/core' {
     export interface InertiaConfig {
         sharedPageProps: SharedProps;
+        flashDataType: {
+            toast?: Toast;
+        };
     }
 }
