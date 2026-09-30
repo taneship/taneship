@@ -58,12 +58,12 @@ npx vp check                                                            # Oxfmt,
 npx vp test                                                             # Vitest
 ```
 
-| Where                   | What runs                                                                                                                                                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `composer check`        | Every gate except the browser tests, Lighthouse, commit messages and dependency audits                                                                                                                                    |
-| `composer test:browser` | The browser tests: every page and the critical journeys, rendered on the server                                                                                                                                           |
-| Git hooks               | Before a commit, Rector and Pint on staged PHP files and `vp check --fix` on staged TypeScript and CSS. On a commit, the commit message check                                                                             |
-| CI                      | `composer check` against SQLite, PostgreSQL and MySQL, the browser tests, Lighthouse on the public pages (at least 0.95 on mobile in every category audited), the commit messages, and the dependency audits, also weekly |
+| Where                   | What runs                                                                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `composer check`        | Every gate except the browser tests, Lighthouse, commit messages and dependency audits                                                                                                                 |
+| `composer test:browser` | The browser tests: every page and the critical journeys, rendered on the server. They run locally, not in CI                                                                                           |
+| Git hooks               | Before a commit, Rector and Pint on staged PHP files and `vp check --fix` on staged TypeScript and CSS. On a commit, the commit message check                                                          |
+| CI                      | `composer check` against SQLite, PostgreSQL and MySQL, Lighthouse on the public pages (at least 0.95 on mobile in every category audited), the commit messages, and the dependency audits, also weekly |
 
 The architecture tests in `tests/Unit/Arch/` check the layering rule, the naming rules, `strict_types`, final classes, the absence of ignore and disable comments, the translation keys, that every component and hook is imported somewhere, and that every type of `resources/js/types/` matches its PHP class.
 
