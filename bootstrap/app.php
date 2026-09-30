@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(SetSecurityHeaders::class);
 
+        // The sidebar writes its state from the browser, where the cookie cannot be encrypted.
+        $middleware->encryptCookies(except: ['sidebar_state']);
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);

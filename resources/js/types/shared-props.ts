@@ -4,6 +4,7 @@ import type { Theme } from '@/types/theme';
 export interface SharedProps {
     name: string;
     theme: Theme;
+    isSidebarOpen: boolean;
     translations: Translations;
 }
 

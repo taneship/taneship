@@ -25,5 +25,9 @@ pest()->extend(TestCase::class)
 
         // Inertia falls back to client rendering when the server render fails: here, that fails the test.
         config(['inertia.ssr.throw_on_error' => true]);
+
+        // Pest serves every request of a test from one application, where scoped singletons outlive
+        // the request. Inertia keeps a request's server render in one: forget them, as Octane does.
+        app()->terminating(fn () => app()->forgetScopedInstances());
     })
     ->in('Browser');

@@ -12,6 +12,8 @@ it('renders the welcome page', function (): void {
             ->component('welcome')
             ->where('name', config('app.name'))
             ->where('errors', [])
+            ->where('theme', 'system')
+            ->where('isSidebarOpen', true)
             ->where('translations', json_decode(File::get(lang_path('en.json')), true)));
 });
 

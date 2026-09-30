@@ -25,6 +25,7 @@ final class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => Config::string('app.name'),
             'theme' => Theme::System,
+            'isSidebarOpen' => $request->cookie('sidebar_state') !== 'false',
             // The interface text: lang/<locale>.json, which Laravel loads under the * group.
             'translations' => Inertia::once(fn (): array => Lang::getLoader()->load($locale, '*', '*'))->as('translations.'.$locale),
         ];

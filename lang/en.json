@@ -2,6 +2,9 @@
     "foundation.welcome.title": "Welcome",
     "foundation.welcome.description": "A Laravel application on Inertia and React, ready to build on.",
     "foundation.welcome.dashboard": "Go to the dashboard",
+    "foundation.sidebar.navigation": "Main navigation",
+    "foundation.sidebar.toggle": "Toggle the sidebar",
+    "foundation.sidebar.dashboard": "Dashboard",
     "foundation.dashboard.title": "Dashboard",
     "foundation.dashboard.empty.title": "Nothing here yet",
     "foundation.dashboard.empty.description": "What your application builds will show up here."
