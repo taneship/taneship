@@ -1,0 +1,40 @@
+name: commits
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  commits:
+    name: commit messages
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Check every commit of the push or pull request
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.after }}
+        run: |
+          # A push that creates the branch has no previous commit: every commit it holds is checked.
+          if [ "$BASE" = 0000000000000000000000000000000000000000 ]; then
+              range="$HEAD"
+          else
+              range="$BASE..$HEAD"
+          fi
+
+          # Merge commits keep the message Git or GitHub gives them, and so does the root commit
+          # GitHub writes for a project created from the template.
+          status=0
+          for commit in $(git rev-list --min-parents=1 --max-parents=1 "$range"); do
+              git log -1 --format=%B "$commit" > "$RUNNER_TEMP/commit-message"
+              .vite-hooks/commit-msg "$RUNNER_TEMP/commit-message" || status=1
+          done
+
+          exit "$status"

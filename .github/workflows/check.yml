@@ -1,0 +1,75 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: composer check (${{ matrix.database }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [sqlite, pgsql, mysql]
+    # A service whose image is an empty string does not start: each run starts its own database only.
+    services:
+      postgres:
+        image: ${{ matrix.database == 'pgsql' && 'postgres:18' || '' }}
+        env:
+          POSTGRES_USER: taneship
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: taneship
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready --username taneship"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mysql:
+        image: ${{ matrix.database == 'mysql' && 'mysql:9.7' || '' }}
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: taneship
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping --host 127.0.0.1 --password=password"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    # phpunit.xml gives these variables to the tests only when the environment does not.
+    env:
+      DB_CONNECTION: ${{ matrix.database }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: ${{ matrix.database == 'mysql' && '3306' || '5432' }}
+      DB_DATABASE: ${{ matrix.database == 'sqlite' && ':memory:' || 'taneship' }}
+      DB_USERNAME: ${{ matrix.database == 'mysql' && 'root' || 'taneship' }}
+      DB_PASSWORD: password
+      VP_GIT_HOOKS: 0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.5'
+          extensions: pdo_sqlite, pdo_pgsql, pdo_mysql
+          coverage: pcov
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: composer install --no-interaction --no-progress --prefer-dist
+
+      - run: npm ci
+
+      - run: cp .env.example .env && php artisan key:generate
+
+      - run: composer check
