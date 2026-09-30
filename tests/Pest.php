@@ -14,3 +14,16 @@ pest()->extend(TestCase::class)
         config(['inertia.ssr.enabled' => false]);
     })
     ->in('Feature');
+
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->beforeEach(function (): void {
+        throw_if(
+            file_exists(public_path('hot')),
+            'The Vite dev server is running (public/hot exists): browser tests run against the production build. Stop composer dev first.',
+        );
+
+        // Inertia falls back to client rendering when the server render fails: here, that fails the test.
+        config(['inertia.ssr.throw_on_error' => true]);
+    })
+    ->in('Browser');

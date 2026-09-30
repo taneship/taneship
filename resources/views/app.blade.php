@@ -32,7 +32,7 @@
             <title>{{ config('app.name') }}</title>
         </x-inertia::head>
     </head>
-    <body class="antialiased">
+    <body class="text-neutral-950 antialiased dark:text-neutral-50">
         <x-inertia::app />
     </body>
 </html>
