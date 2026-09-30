@@ -1,6 +1,7 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 import { useTranslation } from '@/hooks/use-translation';
+import { dashboard } from '@/routes';
 
 export default function Welcome() {
     const { name } = usePage().props;
@@ -16,6 +17,9 @@ export default function Welcome() {
                 <p className="text-lg text-muted-foreground">
                     {translate('foundation.welcome.description')}
                 </p>
+                <Link href={dashboard()} className="font-medium underline underline-offset-4">
+                    {translate('foundation.welcome.dashboard')}
+                </Link>
             </main>
         </>
     );

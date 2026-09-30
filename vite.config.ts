@@ -1,4 +1,5 @@
 import inertia from '@inertiajs/vite';
+import { wayfinder } from '@laravel/vite-plugin-wayfinder';
 import babel from '@rolldown/plugin-babel';
 import tailwindcss from '@tailwindcss/vite';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
@@ -18,6 +19,7 @@ export default defineConfig({
             presets: [reactCompilerPreset()],
         }),
         tailwindcss(),
+        wayfinder(),
     ]),
     server: {
         watch: {
@@ -49,7 +51,14 @@ export default defineConfig({
                 },
             },
         ],
-        ignorePatterns: ['bootstrap/ssr/**', 'public/**', 'vendor/**'],
+        ignorePatterns: [
+            'bootstrap/ssr/**',
+            'public/**',
+            'resources/js/actions/**',
+            'resources/js/routes/**',
+            'resources/js/wayfinder/**',
+            'vendor/**',
+        ],
         options: {
             denyWarnings: true,
             typeAware: true,
@@ -65,6 +74,14 @@ export default defineConfig({
             functions: ['cn', 'cva'],
             stylesheet: './resources/css/app.css',
         },
-        ignorePatterns: ['bootstrap/ssr/**', 'composer.json', 'public/**', 'vendor/**'],
+        ignorePatterns: [
+            'bootstrap/ssr/**',
+            'composer.json',
+            'public/**',
+            'resources/js/actions/**',
+            'resources/js/routes/**',
+            'resources/js/wayfinder/**',
+            'vendor/**',
+        ],
     },
 });

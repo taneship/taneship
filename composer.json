@@ -9,7 +9,8 @@
         "php": "^8.5",
         "inertiajs/inertia-laravel": "^3.4",
         "laravel/framework": "^13.34",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "laravel/wayfinder": "^0.1.21"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.6",
@@ -58,12 +59,14 @@
             "@putenv XDEBUG_MODE=coverage",
             "pest --parallel --exclude-testsuite=Browser --coverage --min=90",
             "pest --type-coverage --min=100",
+            "@php artisan wayfinder:generate --ansi",
             "npx vp check",
             "npx vp test"
         ],
         "fix": [
             "rector process",
             "pint",
+            "@php artisan wayfinder:generate --ansi",
             "npx vp check --fix"
         ],
         "test": [
