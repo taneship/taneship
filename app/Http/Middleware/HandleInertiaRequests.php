@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Enums\Theme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
@@ -23,6 +24,7 @@ final class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => Config::string('app.name'),
+            'theme' => Theme::System,
             // The interface text: lang/<locale>.json, which Laravel loads under the * group.
             'translations' => Inertia::once(fn (): array => Lang::getLoader()->load($locale, '*', '*'))->as('translations.'.$locale),
         ];
