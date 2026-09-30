@@ -24,6 +24,10 @@ export default defineConfig({
             ignored: ['**/storage/framework/views/**'],
         },
     },
+    staged: {
+        '*.php': ['vendor/bin/rector process', 'vendor/bin/pint'],
+        '*.{ts,tsx,css}': 'vp check --fix',
+    },
     test: {
         include: ['resources/js/**/*.test.ts'],
     },

@@ -5,7 +5,8 @@
     "type": "module",
     "scripts": {
         "build": "vp build && vp build --ssr",
-        "dev": "vp dev"
+        "dev": "vp dev",
+        "prepare": "vp config --no-agent"
     },
     "dependencies": {
         "@inertiajs/react": "^3.7.1",
@@ -33,5 +34,8 @@
     },
     "overrides": {
         "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0"
+    },
+    "allowScripts": {
+        "fsevents": false
     }
 }

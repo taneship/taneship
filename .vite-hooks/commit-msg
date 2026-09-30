@@ -1,0 +1,49 @@
+#!/bin/sh
+# Checks the header of a commit message against the commit convention: type(scope): subject.
+# Git runs it on every commit, and CI on every pushed commit, with the message file as argument.
+
+root=$(cd "$(dirname "$0")/.." && pwd)
+header=$(grep -v '^#' "$1" | head -n 1)
+
+reject() {
+    printf 'commit-msg: %s\n  %s\n' "$1" "$header" >&2
+    exit 1
+}
+
+# A commit that concludes a merge keeps the message Git gives it.
+merge_head=$(git rev-parse --git-path MERGE_HEAD 2>/dev/null)
+if [ -n "$merge_head" ] && [ -f "$merge_head" ]; then
+    exit 0
+fi
+
+# fixup! and squash! commits are folded away before they reach CI.
+case "$header" in
+    'fixup! '* | 'squash! '*)
+        [ "${CI:-}" = true ] && reject 'fixup! and squash! commits must be squashed before they are pushed.'
+        exit 0
+        ;;
+esac
+
+format='^(feat|fix|refactor|perf|test|docs|build|ci|chore)\(([a-z0-9-]+)\): ([^ ].*)$'
+
+printf '%s\n' "$header" | grep -Eq "$format" ||
+    reject 'The header reads type(scope): subject. Types: feat, fix, refactor, perf, test, docs, build, ci, chore.'
+
+scope=$(printf '%s\n' "$header" | sed -E "s/$format/\\2/")
+subject=$(printf '%s\n' "$header" | sed -E "s/$format/\\3/")
+
+# A module has server text in lang/en/<module>.php, interface text under its id in lang/en.json, or both.
+if [ "$scope" != deps ] && [ "$scope" != docs ] && [ ! -f "$root/lang/en/$scope.php" ] &&
+    ! grep -q "^[[:space:]]*\"$scope\." "$root/lang/en.json" 2>/dev/null; then
+    reject "The scope is deps, docs or a module with text in lang/en/ or lang/en.json, and $scope is none of them."
+fi
+
+printf '%s\n' "$subject" | grep -q '[[:upper:]]' && reject 'The subject is lowercase.'
+
+case "$subject" in
+    *.) reject 'The subject has no trailing period.' ;;
+esac
+
+[ "${#header}" -le 72 ] || reject "The header is at most 72 characters, not ${#header}."
+
+exit 0
