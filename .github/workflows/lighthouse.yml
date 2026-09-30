@@ -12,6 +12,7 @@ jobs:
   lighthouse:
     name: lighthouse
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     env:
       APP_ENV: production
       APP_DEBUG: false
