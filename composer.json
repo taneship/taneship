@@ -57,7 +57,8 @@
             "@putenv XDEBUG_MODE=coverage",
             "pest --parallel --exclude-testsuite=Browser --coverage --min=90",
             "pest --type-coverage --min=100",
-            "npx vp check"
+            "npx vp check",
+            "npx vp test"
         ],
         "fix": [
             "rector process",

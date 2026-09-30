@@ -24,6 +24,9 @@ export default defineConfig({
             ignored: ['**/storage/framework/views/**'],
         },
     },
+    test: {
+        include: ['resources/js/**/*.test.ts'],
+    },
     lint: {
         plugins: ['typescript', 'react', 'jsx-a11y', 'import'],
         rules: {
