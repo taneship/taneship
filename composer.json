@@ -56,11 +56,13 @@
             "phpstan analyse",
             "@putenv XDEBUG_MODE=coverage",
             "pest --parallel --exclude-testsuite=Browser --coverage --min=90",
-            "pest --type-coverage --min=100"
+            "pest --type-coverage --min=100",
+            "npx vp check"
         ],
         "fix": [
             "rector process",
-            "pint"
+            "pint",
+            "npx vp check --fix"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",

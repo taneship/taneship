@@ -1,9 +1,9 @@
 export interface SharedProps {
-  name: string;
+    name: string;
 }
 
 declare module '@inertiajs/core' {
-  export interface InertiaConfig {
-    sharedPageProps: SharedProps;
-  }
+    export interface InertiaConfig {
+        sharedPageProps: SharedProps;
+    }
 }
