@@ -1,11 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { ChevronsUpDownIcon, LogOutIcon, UserRoundIcon } from 'lucide-react';
+import { ChevronsUpDownIcon, LogOutIcon, SettingsIcon, UserRoundIcon } from 'lucide-react';
 import { useRef } from 'react';
 
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useTranslation } from '@/hooks/use-translation';
 import { logout } from '@/routes';
+import account from '@/routes/account';
 import type { User } from '@/types/user';
 
 type UserMenuProps = {
@@ -56,6 +58,11 @@ export function UserMenu({ user }: UserMenuProps) {
                             align="end"
                             className="min-w-56"
                         >
+                            <DropdownMenuItem render={<Link href={account.security.edit()} />}>
+                                <SettingsIcon />
+                                {translate('identity.user_menu.account_settings')}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem
                                 nativeButton
                                 render={<Link href={logout()} as="button" className="w-full" />}

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Account\SecurityController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\PasswordConfirmationController;
@@ -41,4 +42,8 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/confirm-password', [PasswordConfirmationController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('password.confirm.store');
+});
+
+Route::middleware(['auth', 'verified', 'password.confirm'])->group(function (): void {
+    Route::get('/account/security', [SecurityController::class, 'edit'])->name('account.security.edit');
 });

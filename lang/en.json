@@ -59,6 +59,17 @@
     "identity.confirm_password.description": "This is a secure area. Enter your password to continue.",
     "identity.confirm_password.password": "Password",
     "identity.confirm_password.submit": "Confirm password",
+    "identity.account_layout.title": "Account settings",
+    "identity.account_layout.description": "Manage your account and how you sign in.",
+    "identity.account_layout.security": "Security",
+    "identity.security.title": "Security",
+    "identity.security.passkeys.title": "Passkeys",
+    "identity.security.passkeys.description": "Sign in with your fingerprint, your face or your screen lock, without typing a password.",
+    "identity.security.passkeys.empty": "No passkeys yet.",
+    "identity.security.passkeys.added": "Added :time",
+    "identity.security.passkeys.last_used": "Last used :time",
+    "identity.security.passkeys.never_used": "Never used",
     "identity.user_menu.label": "User menu",
+    "identity.user_menu.account_settings": "Account settings",
     "identity.user_menu.sign_out": "Sign out"
 }

@@ -1,5 +1,6 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { LayoutDashboardIcon } from 'lucide-react';
+import { useEffect } from 'react';
 
 import {
     Sidebar,
@@ -9,6 +10,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import { UserMenu } from '@/components/user-menu';
 import { useTranslation } from '@/hooks/use-translation';
@@ -17,6 +19,10 @@ import { dashboard } from '@/routes';
 export function AppSidebar() {
     const { translate } = useTranslation();
     const { url, props } = usePage();
+    const { setOpenMobile } = useSidebar();
+
+    // The layout outlives a visit: on a phone, the sheet would stay open over the next page.
+    useEffect(() => router.on('navigate', () => setOpenMobile(false)), [setOpenMobile]);
 
     const items = [
         {
