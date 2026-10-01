@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Providers\AppServiceProvider;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rules\Password;
 
 function bootAppServiceProviderIn(string $environment): void
 {
@@ -36,3 +37,21 @@ it('prohibits destructive database commands in production', function (string $co
 
     expect($this->artisan($command, ['--force' => true]))->toBe(1);
 })->with(['db:wipe', 'migrate:fresh', 'migrate:refresh', 'migrate:reset', 'migrate:rollback']);
+
+it('requires passwords of 12 characters, with no composition rule', function (): void {
+    expect(Password::defaults()->appliedRules())->toMatchArray([
+        'min' => 12,
+        'mixedCase' => false,
+        'letters' => false,
+        'numbers' => false,
+        'symbols' => false,
+    ]);
+});
+
+it('checks passwords against known breaches in production only', function (): void {
+    expect(Password::defaults()->appliedRules()['uncompromised'])->toBeFalse();
+
+    bootAppServiceProviderIn('production');
+
+    expect(Password::defaults()->appliedRules())->toMatchArray(['min' => 12, 'uncompromised' => true]);
+});

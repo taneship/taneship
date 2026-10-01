@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 
 import { useTranslation } from '@/hooks/use-translation';
-import { dashboard, login } from '@/routes';
+import { dashboard, login, register } from '@/routes';
 
 export default function Welcome() {
     const { name, user } = usePage().props;
@@ -18,9 +18,17 @@ export default function Welcome() {
                     {translate('foundation.welcome.description')}
                 </p>
                 {user === null ? (
-                    <Link href={login()} className="font-medium underline underline-offset-4">
-                        {translate('identity.welcome.sign_in')}
-                    </Link>
+                    <div className="flex gap-4">
+                        <Link href={login()} className="font-medium underline underline-offset-4">
+                            {translate('identity.welcome.sign_in')}
+                        </Link>
+                        <Link
+                            href={register()}
+                            className="font-medium underline underline-offset-4"
+                        >
+                            {translate('identity.welcome.sign_up')}
+                        </Link>
+                    </div>
                 ) : (
                     <Link href={dashboard()} className="font-medium underline underline-offset-4">
                         {translate('foundation.welcome.dashboard')}

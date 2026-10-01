@@ -2,7 +2,12 @@ import { Input as InputPrimitive } from '@base-ui/react/input';
 import { cn } from 'cn';
 import * as React from 'react';
 
-function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
+// Password managers read passwordrules, which React's types do not declare.
+function Input({
+    className,
+    type,
+    ...props
+}: React.ComponentProps<'input'> & { passwordrules?: string }) {
     return (
         <InputPrimitive
             type={type}

@@ -31,6 +31,13 @@ it('links guests to the sign-in page', function (): void {
         ->assertNoSmoke();
 });
 
+it('links guests to the sign-up page', function (): void {
+    visit(route('home'))
+        ->click(trans('identity.welcome.sign_up'))
+        ->assertPathIs('/register')
+        ->assertNoSmoke();
+});
+
 it('links signed-in users to the dashboard', function (): void {
     $this->actingAs(User::factory()->create());
 
