@@ -9,6 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\URL;
 
 final class VerifyEmail extends Notification implements ShouldQueue
@@ -25,7 +26,8 @@ final class VerifyEmail extends Notification implements ShouldQueue
 
     public function toMail(User $notifiable): MailMessage
     {
-        $minutes = 60;
+        // The key Laravel's own notification reads, which no configuration file sets by default.
+        $minutes = Config::integer('auth.verification.expire', 60);
 
         $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes($minutes), [
             'id' => $notifiable->id,

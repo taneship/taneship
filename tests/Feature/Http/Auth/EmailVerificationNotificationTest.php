@@ -41,6 +41,27 @@ it('sends the mail again with a toast', function (): void {
     });
 });
 
+it('gives the link the lifetime the configuration sets', function (): void {
+    Notification::fake();
+    $this->freezeTime();
+    config(['auth.verification.expire' => 30]);
+    $user = User::factory()->unverified()->create();
+
+    $this->actingAs($user)->post(route('verification.send'));
+
+    Notification::assertSentTo($user, function (VerifyEmail $notification) use ($user): bool {
+        $mail = $notification->toMail($user);
+
+        expect($mail->actionUrl)->toBe(URL::temporarySignedRoute('verification.verify', now()->addMinutes(30), [
+            'id' => $user->id,
+            'hash' => hash('sha256', $user->email),
+        ]))
+            ->and($mail->outroLines)->toContain(trans('identity.verification.mail.expiration', ['count' => 30]));
+
+        return true;
+    });
+});
+
 it('queues the mail', function (): void {
     Queue::fake();
     $user = User::factory()->unverified()->create();
