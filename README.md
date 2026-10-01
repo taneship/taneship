@@ -26,7 +26,7 @@ composer setup
 composer dev
 ```
 
-The application answers on http://localhost:8000.
+The application answers on http://localhost:8000. Sign in as the demo user, `demo@example.com` with the password `password`. The seeders create it outside production only.
 
 The project starts from a single commit and owns every file from then on: change any of them. Taneship tags its releases `vX.Y.Z` on `main`, each with a [GitHub Release](https://github.com/taneship/taneship/releases) whose notes describe the changes and link to their diff. Take what you want from a release by hand.
 

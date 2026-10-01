@@ -25,5 +25,7 @@
     "identity.login.email": "Email address",
     "identity.login.password": "Password",
     "identity.login.remember": "Remember me",
-    "identity.login.submit": "Sign in"
+    "identity.login.submit": "Sign in",
+    "identity.user_menu.label": "User menu",
+    "identity.user_menu.sign_out": "Sign out"
 }

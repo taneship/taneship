@@ -4,17 +4,19 @@ import { LayoutDashboardIcon } from 'lucide-react';
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarGroup,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { UserMenu } from '@/components/user-menu';
 import { useTranslation } from '@/hooks/use-translation';
 import { dashboard } from '@/routes';
 
 export function AppSidebar() {
     const { translate } = useTranslation();
-    const { url } = usePage();
+    const { url, props } = usePage();
 
     const items = [
         {
@@ -46,6 +48,11 @@ export function AppSidebar() {
                     </SidebarGroup>
                 </nav>
             </SidebarContent>
+            {props.user !== null && (
+                <SidebarFooter>
+                    <UserMenu user={props.user} />
+                </SidebarFooter>
+            )}
         </Sidebar>
     );
 }

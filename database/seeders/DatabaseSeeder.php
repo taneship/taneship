@@ -10,6 +10,8 @@ final class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Foundation seeds nothing. Modules call their seeders here, and demo data only outside production.
+        if (! app()->isProduction()) {
+            $this->call(DemoUserSeeder::class);
+        }
     }
 }
