@@ -38,20 +38,15 @@ it('prohibits destructive database commands in production', function (string $co
     expect($this->artisan($command, ['--force' => true]))->toBe(1);
 })->with(['db:wipe', 'migrate:fresh', 'migrate:refresh', 'migrate:reset', 'migrate:rollback']);
 
-it('requires passwords of 12 characters, with no composition rule', function (): void {
+it('requires passwords of 12 characters, with no composition rule and no breach check', function (string $environment): void {
+    bootAppServiceProviderIn($environment);
+
     expect(Password::defaults()->appliedRules())->toMatchArray([
         'min' => 12,
         'mixedCase' => false,
         'letters' => false,
         'numbers' => false,
         'symbols' => false,
+        'uncompromised' => false,
     ]);
-});
-
-it('checks passwords against known breaches in production only', function (): void {
-    expect(Password::defaults()->appliedRules()['uncompromised'])->toBeFalse();
-
-    bootAppServiceProviderIn('production');
-
-    expect(Password::defaults()->appliedRules())->toMatchArray(['min' => 12, 'uncompromised' => true]);
-});
+})->with(['testing', 'production']);

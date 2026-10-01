@@ -21,8 +21,6 @@ final class AppServiceProvider extends ServiceProvider
 
         DB::prohibitDestructiveCommands($this->app->isProduction());
 
-        // Have I Been Pwned is a network call, which tests never make.
-        Password::defaults(fn (): Password => Password::min(12)
-            ->when($this->app->isProduction(), fn (Password $password): Password => $password->uncompromised()));
+        Password::defaults(fn (): Password => Password::min(12));
     }
 }
