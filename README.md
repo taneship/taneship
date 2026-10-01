@@ -86,6 +86,8 @@ php artisan queue:work          # runs queued jobs
 php artisan schedule:work       # runs scheduled tasks, or run php artisan schedule:run every minute from cron
 ```
 
+Behind a load balancer or a CDN, set `TRUSTED_PROXIES` to the addresses or CIDR ranges of your proxies, separated by commas, or to `*` when only they can reach the server. Without it, the application takes the proxy for the visitor: rate limits count every visitor as one, and the links of verification mails are refused.
+
 ## Pro and Teams
 
 Taneship Pro and Taneship Teams start from this edition for applications that need more. [See what they add](https://github.com/taneship).
