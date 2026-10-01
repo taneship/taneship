@@ -202,7 +202,7 @@ Everything else stays in Laravel's place:
 - **Exceptions**: named after the broken rule, suffixed `Exception` as in Laravel, and built through named constructors (`EmailAlreadyVerifiedException::for($user)`).
 - **Enums**: singular (`Theme`, `SubscriptionStatus`), cases in PascalCase, backed by lowercase snake_case strings.
 - **Controllers**: resourceful methods only (`index`, `create`, `store`, `show`, `edit`, `update`, `destroy`). Any other operation becomes a resource of its own, for example `EmailVerificationController@store`.
-- **Form requests**: `<Verb><Noun>Request`, exposing `toData()`, which returns the Data object its action expects.
+- **Form requests**: `<Verb><Noun>Request`, exposing `toData()`, which returns what its action expects: a Data object, or the value itself when the action takes a single one (`SendPasswordResetLink::handle(string $email)`).
 
 **Database**
 

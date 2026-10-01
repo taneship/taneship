@@ -57,6 +57,13 @@ it('signs in, remembering the user when asked', function (): void {
     expect($user->refresh()->remember_token)->not->toBeNull();
 });
 
+it('links to the forgot-password page', function (): void {
+    visit(route('login'))
+        ->click(trans('identity.login.forgot_password'))
+        ->assertPathIs('/forgot-password')
+        ->assertNoSmoke();
+});
+
 it('links to the sign-up page', function (): void {
     visit(route('login'))
         ->click(trans('identity.login.sign_up'))

@@ -8,6 +8,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { register } from '@/routes';
 import login from '@/routes/login';
+import password from '@/routes/password';
 
 export default function AuthLogin() {
     const { translate } = useTranslation();
@@ -42,9 +43,17 @@ export default function AuthLogin() {
                             <FieldError id="email-error">{errors.email}</FieldError>
                         </Field>
                         <Field data-invalid={errors.password !== undefined}>
-                            <FieldLabel htmlFor="password">
-                                {translate('identity.login.password')}
-                            </FieldLabel>
+                            <div className="flex items-center">
+                                <FieldLabel htmlFor="password">
+                                    {translate('identity.login.password')}
+                                </FieldLabel>
+                                <Link
+                                    href={password.request()}
+                                    className="ml-auto text-sm underline-offset-4 hover:underline"
+                                >
+                                    {translate('identity.login.forgot_password')}
+                                </Link>
+                            </div>
                             <Input
                                 id="password"
                                 name="password"
