@@ -70,6 +70,18 @@ it('queues the mail', function (): void {
     );
 });
 
+it('encrypts the queued mail, which carries the token', function (): void {
+    Queue::fake();
+    $user = User::factory()->create();
+
+    $this->post(route('password.email'), ['email' => $user->email]);
+
+    Queue::assertPushed(
+        SendQueuedNotifications::class,
+        fn (SendQueuedNotifications $job): bool => $job->shouldBeEncrypted,
+    );
+});
+
 it('gives the same answer whether the address has an account, has none, or asked less than a minute ago', function (string $email): void {
     $this->from(route('password.request'))
         ->post(route('password.email'), ['email' => $email])

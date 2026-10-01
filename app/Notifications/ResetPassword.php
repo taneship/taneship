@@ -6,13 +6,15 @@ namespace App\Notifications;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Config;
 use SensitiveParameter;
 
-final class ResetPassword extends Notification implements ShouldQueue
+// Encrypted in the queue: the job carries the token, of which the broker stores only a hash.
+final class ResetPassword extends Notification implements ShouldBeEncrypted, ShouldQueue
 {
     use Queueable;
 
