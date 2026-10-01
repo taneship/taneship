@@ -55,6 +55,10 @@
     "identity.reset_password.password": "New password",
     "identity.reset_password.password_confirmation": "Confirm new password",
     "identity.reset_password.submit": "Reset password",
+    "identity.confirm_password.title": "Confirm your password",
+    "identity.confirm_password.description": "This is a secure area. Enter your password to continue.",
+    "identity.confirm_password.password": "Password",
+    "identity.confirm_password.submit": "Confirm password",
     "identity.user_menu.label": "User menu",
     "identity.user_menu.sign_out": "Sign out"
 }
