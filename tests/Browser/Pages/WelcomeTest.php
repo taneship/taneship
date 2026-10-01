@@ -24,7 +24,14 @@ it('renders the welcome page in dark mode', function (): void {
         ->assertNoAccessibilityIssues(level: 3);
 });
 
-it('links to the dashboard', function (): void {
+it('links guests to the sign-in page', function (): void {
+    visit(route('home'))
+        ->click(trans('identity.welcome.sign_in'))
+        ->assertPathIs('/login')
+        ->assertNoSmoke();
+});
+
+it('links signed-in users to the dashboard', function (): void {
     $this->actingAs(User::factory()->create());
 
     visit(route('home'))

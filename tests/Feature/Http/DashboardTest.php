@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia;
 
 it('renders the dashboard for a signed-in user', function (): void {
-    $this->actingAs(User::factory()->create())
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
         ->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
@@ -16,6 +18,7 @@ it('renders the dashboard for a signed-in user', function (): void {
             ->where('theme', 'system')
             ->where('errors', [])
             ->where('isSidebarOpen', true)
+            ->where('user', ['name' => $user->name, 'email' => $user->email])
             ->where('translations', json_decode(File::get(lang_path('en.json')), true)));
 });
 
@@ -28,6 +31,10 @@ it('shares the sidebar state the browser remembers', function (string $cookie, b
     'collapsed' => ['false', false],
     'expanded' => ['true', true],
 ]);
+
+it('sends guests to the sign-in page', function (): void {
+    $this->get(route('dashboard'))->assertRedirect(route('login'));
+});
 
 it('turns guests away', function (): void {
     $this->getJson(route('dashboard'))->assertUnauthorized();

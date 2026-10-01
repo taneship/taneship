@@ -22,6 +22,7 @@ it('renders an http error as a page, with the shared props', function (int $stat
             ->where('name', config('app.name'))
             ->where('theme', 'system')
             ->where('isSidebarOpen', true)
+            ->where('user', null)
             ->where('errors', [])
             ->where('translations', json_decode(File::get(lang_path('en.json')), true)));
 })->with([403, 404, 429, 503]);
