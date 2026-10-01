@@ -10,9 +10,11 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use SensitiveParameter;
 
 #[Fillable(['name', 'email', 'password'])]
@@ -33,6 +35,15 @@ final class User extends Authenticatable implements MustVerifyEmail
     public function sendPasswordResetNotification(#[SensitiveParameter] $token): void
     {
         $this->notify(new ResetPassword($token));
+    }
+
+    /**
+     * @return Attribute<string, string>
+     */
+    protected function email(): Attribute
+    {
+        // Stored in lowercase, whoever writes it: Jane@Example.com and jane@example.com are one account.
+        return Attribute::make(set: fn (string $email): string => Str::lower($email));
     }
 
     /**
