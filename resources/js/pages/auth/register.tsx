@@ -1,8 +1,8 @@
 import { Form, Head, Link } from '@inertiajs/react';
 
+import { InputField } from '@/components/input-field';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Field, FieldGroup } from '@/components/ui/field';
 import { useTranslation } from '@/hooks/use-translation';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { login } from '@/routes';
@@ -27,71 +27,39 @@ export default function AuthRegister({ passwordRules }: AuthRegisterProps) {
             <Form action={register.store()} resetOnError={['password', 'password_confirmation']}>
                 {({ errors, processing }) => (
                     <FieldGroup>
-                        <Field data-invalid={errors.name !== undefined}>
-                            <FieldLabel htmlFor="name">
-                                {translate('identity.register.name')}
-                            </FieldLabel>
-                            <Input
-                                id="name"
-                                name="name"
-                                type="text"
-                                autoComplete="name"
-                                required
-                                aria-invalid={errors.name !== undefined}
-                                aria-describedby={
-                                    errors.name === undefined ? undefined : 'name-error'
-                                }
-                            />
-                            <FieldError id="name-error">{errors.name}</FieldError>
-                        </Field>
-                        <Field data-invalid={errors.email !== undefined}>
-                            <FieldLabel htmlFor="email">
-                                {translate('identity.register.email')}
-                            </FieldLabel>
-                            <Input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="username"
-                                required
-                                aria-invalid={errors.email !== undefined}
-                                aria-describedby={
-                                    errors.email === undefined ? undefined : 'email-error'
-                                }
-                            />
-                            <FieldError id="email-error">{errors.email}</FieldError>
-                        </Field>
-                        <Field data-invalid={errors.password !== undefined}>
-                            <FieldLabel htmlFor="password">
-                                {translate('identity.register.password')}
-                            </FieldLabel>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="new-password"
-                                passwordrules={passwordRules}
-                                required
-                                aria-invalid={errors.password !== undefined}
-                                aria-describedby={
-                                    errors.password === undefined ? undefined : 'password-error'
-                                }
-                            />
-                            <FieldError id="password-error">{errors.password}</FieldError>
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="password_confirmation">
-                                {translate('identity.register.password_confirmation')}
-                            </FieldLabel>
-                            <Input
-                                id="password_confirmation"
-                                name="password_confirmation"
-                                type="password"
-                                autoComplete="new-password"
-                                passwordrules={passwordRules}
-                                required
-                            />
-                        </Field>
+                        <InputField
+                            name="name"
+                            label={translate('identity.register.name')}
+                            error={errors.name}
+                            type="text"
+                            autoComplete="name"
+                            required
+                        />
+                        <InputField
+                            name="email"
+                            label={translate('identity.register.email')}
+                            error={errors.email}
+                            type="email"
+                            autoComplete="username"
+                            required
+                        />
+                        <InputField
+                            name="password"
+                            label={translate('identity.register.password')}
+                            error={errors.password}
+                            type="password"
+                            autoComplete="new-password"
+                            passwordrules={passwordRules}
+                            required
+                        />
+                        <InputField
+                            name="password_confirmation"
+                            label={translate('identity.register.password_confirmation')}
+                            type="password"
+                            autoComplete="new-password"
+                            passwordrules={passwordRules}
+                            required
+                        />
                         <Field>
                             <Button type="submit" size="lg" disabled={processing}>
                                 {translate('identity.register.submit')}

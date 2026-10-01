@@ -1,8 +1,8 @@
 import { Form, Head, Link } from '@inertiajs/react';
 
+import { InputField } from '@/components/input-field';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Field, FieldGroup } from '@/components/ui/field';
 import { useTranslation } from '@/hooks/use-translation';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { login } from '@/routes';
@@ -25,23 +25,14 @@ export default function AuthForgotPassword() {
             <Form action={password.email()}>
                 {({ errors, processing }) => (
                     <FieldGroup>
-                        <Field data-invalid={errors.email !== undefined}>
-                            <FieldLabel htmlFor="email">
-                                {translate('identity.forgot_password.email')}
-                            </FieldLabel>
-                            <Input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="username"
-                                required
-                                aria-invalid={errors.email !== undefined}
-                                aria-describedby={
-                                    errors.email === undefined ? undefined : 'email-error'
-                                }
-                            />
-                            <FieldError id="email-error">{errors.email}</FieldError>
-                        </Field>
+                        <InputField
+                            name="email"
+                            label={translate('identity.forgot_password.email')}
+                            error={errors.email}
+                            type="email"
+                            autoComplete="username"
+                            required
+                        />
                         <Field>
                             <Button type="submit" size="lg" disabled={processing}>
                                 {translate('identity.forgot_password.submit')}

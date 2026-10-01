@@ -160,7 +160,7 @@ Everything else stays in Laravel's place:
 - Every page receives the shared props: `name`, `theme`, `isSidebarOpen`, `translations` and `errors`.
 - Style with the design tokens of `resources/css/app.css`, such as `bg-background`, `text-foreground`, `text-muted-foreground` and `border`. They hold in light and dark mode, where raw colors break the contrast rules. Dark mode is the `dark` class on `<html>`.
 - Add a shadcn/ui component with `npx shadcn@latest add <component>` when a page uses it, never in bulk. A package it installs stays only while a component in use needs it.
-- Forms are built with shadcn/ui's Field components: a `FieldGroup` holds the fields, and each `Field` holds a control, its `FieldLabel` and its `FieldError`. A field in error carries `data-invalid` on its `Field`, and `aria-invalid` and `aria-describedby`, naming its `FieldError`, on its control. A checkbox sits in a horizontal `Field`, before its label.
+- Forms are built with shadcn/ui's Field components: a `FieldGroup` holds the fields, and each `Field` holds a control, its `FieldLabel` and its `FieldError`. A field in error carries `data-invalid` on its `Field`, and `aria-invalid` and `aria-describedby`, naming its `FieldError`, on its control. `InputField`, in `components/input-field.tsx`, composes them for an input: it takes the name, the label, the error and the props of the input, and wires the rest. A checkbox sits in a horizontal `Field`, before its label.
 - A controller shows a toast by flashing it: `Inertia::flash('toast', ['type' => 'success', 'message' => __('billing.invoice_sent')]);`. The type is `success` or `error`, and the message is server text.
 
 ## Translations

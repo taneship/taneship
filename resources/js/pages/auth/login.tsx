@@ -1,9 +1,9 @@
 import { Form, Head, Link } from '@inertiajs/react';
 
+import { InputField } from '@/components/input-field';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { useTranslation } from '@/hooks/use-translation';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { register } from '@/routes';
@@ -25,48 +25,30 @@ export default function AuthLogin() {
             <Form action={login.store()} resetOnError={['password']}>
                 {({ errors, processing }) => (
                     <FieldGroup>
-                        <Field data-invalid={errors.email !== undefined}>
-                            <FieldLabel htmlFor="email">
-                                {translate('identity.login.email')}
-                            </FieldLabel>
-                            <Input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="username"
-                                required
-                                aria-invalid={errors.email !== undefined}
-                                aria-describedby={
-                                    errors.email === undefined ? undefined : 'email-error'
-                                }
-                            />
-                            <FieldError id="email-error">{errors.email}</FieldError>
-                        </Field>
-                        <Field data-invalid={errors.password !== undefined}>
-                            <div className="flex items-center">
-                                <FieldLabel htmlFor="password">
-                                    {translate('identity.login.password')}
-                                </FieldLabel>
+                        <InputField
+                            name="email"
+                            label={translate('identity.login.email')}
+                            error={errors.email}
+                            type="email"
+                            autoComplete="username"
+                            required
+                        />
+                        <InputField
+                            name="password"
+                            label={translate('identity.login.password')}
+                            labelAction={
                                 <Link
                                     href={password.request()}
                                     className="ml-auto text-sm underline-offset-4 hover:underline"
                                 >
                                     {translate('identity.login.forgot_password')}
                                 </Link>
-                            </div>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                aria-invalid={errors.password !== undefined}
-                                aria-describedby={
-                                    errors.password === undefined ? undefined : 'password-error'
-                                }
-                            />
-                            <FieldError id="password-error">{errors.password}</FieldError>
-                        </Field>
+                            }
+                            error={errors.password}
+                            type="password"
+                            autoComplete="current-password"
+                            required
+                        />
                         <Field orientation="horizontal">
                             <Checkbox id="remember" name="remember" />
                             <FieldLabel htmlFor="remember">
