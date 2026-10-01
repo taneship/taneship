@@ -48,15 +48,15 @@ it('shows the error of an address already taken', function (string $mode): void 
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
 
-it('signs up and leads to the dashboard', function (): void {
+it('signs up and asks to verify the email address', function (): void {
     visit(route('register'))
         ->type('name', 'Jane Doe')
         ->type('email', 'jane@example.com')
         ->type('password', 'correct horse battery')
         ->type('password_confirmation', 'correct horse battery')
         ->press('[type="submit"]')
-        ->assertPathIs('/dashboard')
-        ->assertSee('Jane Doe')
+        ->assertPathIs('/email/verify')
+        ->assertSee(trans('identity.verify_email.title'))
         ->assertNoSmoke();
 });
 

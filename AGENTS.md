@@ -83,6 +83,7 @@ app/                            One folder per kind of class, flat, as Laravel d
 │   └── Requests/<Area>/        Mirrors Controllers/
 ├── Listeners/
 ├── Models/
+├── Notifications/
 ├── Policies/
 └── Providers/
 database/                       Laravel conventions: factories, migrations, seeders

@@ -32,6 +32,12 @@ it('shares the sidebar state the browser remembers', function (string $cookie, b
     'expanded' => ['true', true],
 ]);
 
+it('sends unverified users to the verification notice', function (): void {
+    $this->actingAs(User::factory()->unverified()->create())
+        ->get(route('dashboard'))
+        ->assertRedirect(route('verification.notice'));
+});
+
 it('sends guests to the sign-in page', function (): void {
     $this->get(route('dashboard'))->assertRedirect(route('login'));
 });

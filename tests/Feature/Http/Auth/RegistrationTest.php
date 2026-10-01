@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Notifications\VerifyEmail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
 
 /**
@@ -54,6 +56,14 @@ it('signs the new user in and leads to the dashboard', function (): void {
         ->and($user->email)->toBe('jane@example.com');
     $this->assertAuthenticatedAs($user);
     Event::assertDispatched(Registered::class);
+});
+
+it('sends the verification mail', function (): void {
+    Notification::fake();
+
+    $this->post(route('register.store'), signUpInput());
+
+    Notification::assertSentToTimes(User::query()->sole(), VerifyEmail::class);
 });
 
 it('stores the address in lowercase', function (): void {

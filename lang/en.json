@@ -38,6 +38,10 @@
     "identity.register.submit": "Create account",
     "identity.register.has_account": "Already have an account?",
     "identity.register.sign_in": "Sign in",
+    "identity.verify_email.title": "Verify your email address",
+    "identity.verify_email.description": "Open the link we sent to your email address to verify it.",
+    "identity.verify_email.resend": "Send the link again",
+    "identity.verify_email.sign_out": "Sign out",
     "identity.user_menu.label": "User menu",
     "identity.user_menu.sign_out": "Sign out"
 }
