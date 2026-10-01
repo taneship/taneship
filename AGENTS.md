@@ -128,7 +128,8 @@ tests/
 - Actions never use the delivery layer: `App\Http`, `App\Filament` and `App\Console`. That is the only layering rule.
 - A folder exists only when it contains a file. No empty scaffolding.
 - Wayfinder output is generated, git-ignored and never edited by hand.
-- The shadcn/ui primitives in `components/ui/` are owned code: edited freely, and linted and formatted like the rest. Two rules do not apply to them, because shadcn generates files that break them: `react/only-export-components` and the `<Component>Props` naming. They import `cn()` from shadcn's `cn` package.
+- The shadcn/ui primitives in `components/ui/` are owned code: edited freely, and linted and formatted like the rest. Two rules do not apply to them, because shadcn generates files that break them: `react/only-export-components`, which only protects Fast Refresh, and the `<Component>Props` naming. Every other rule applies to them: a primitive that breaks one is fixed in its file. `shadcn add` never overwrites an existing primitive: run it without `--overwrite`, and answer no when it offers to overwrite a file. A change upstream is ported by hand. They import `cn()` from shadcn's `cn` package, so there is no `lib/utils.ts`.
+- A popup renders inside the landmark that holds its trigger, through the `container` prop its primitive forwards to Base UI's portal, as `DropdownMenuContent` does. Base UI portals it to the end of `<body>` by default, outside every landmark, where it fails axe's `region` rule.
 
 ## Modules
 
