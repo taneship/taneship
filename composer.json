@@ -10,7 +10,8 @@
         "inertiajs/inertia-laravel": "^3.4",
         "laravel/framework": "^13.34",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.21"
+        "laravel/wayfinder": "^0.1.21",
+        "web-auth/webauthn-lib": "^5.3.9"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.6",

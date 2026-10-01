@@ -6,6 +6,13 @@ use App\Providers\AppServiceProvider;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Password;
+use Symfony\Component\Serializer\SerializerInterface;
+use Webauthn\AuthenticatorSelectionCriteria;
+use Webauthn\PublicKeyCredentialCreationOptions;
+use Webauthn\PublicKeyCredentialDescriptor;
+use Webauthn\PublicKeyCredentialParameters;
+use Webauthn\PublicKeyCredentialRpEntity;
+use Webauthn\PublicKeyCredentialUserEntity;
 
 function bootAppServiceProviderIn(string $environment): void
 {
@@ -50,3 +57,24 @@ it('requires passwords of 12 characters, with no composition rule and no breach 
         'uncompromised' => false,
     ]);
 })->with(['testing', 'production']);
+
+it('binds one serializer for webauthn data', function (): void {
+    expect(app(SerializerInterface::class))->toBe(app(SerializerInterface::class));
+});
+
+it('reads back the ceremony options it serializes', function (): void {
+    $options = PublicKeyCredentialCreationOptions::create(
+        rp: PublicKeyCredentialRpEntity::create('Taneship', 'localhost'),
+        user: PublicKeyCredentialUserEntity::create('jane@example.com', random_bytes(32), 'Jane Doe'),
+        challenge: random_bytes(32),
+        pubKeyCredParams: [PublicKeyCredentialParameters::createPk(-7)],
+        authenticatorSelection: AuthenticatorSelectionCriteria::create(userVerification: 'required', residentKey: 'required'),
+        attestation: 'none',
+        excludeCredentials: [PublicKeyCredentialDescriptor::create('public-key', random_bytes(32))],
+    );
+
+    $serializer = app(SerializerInterface::class);
+
+    expect($serializer->deserialize($serializer->serialize($options, 'json'), PublicKeyCredentialCreationOptions::class, 'json'))
+        ->toEqual($options);
+});

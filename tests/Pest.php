@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Symfony\Component\Serializer\SerializerInterface;
 use Tests\TestCase;
+use Webauthn\PublicKeyCredential;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
@@ -31,3 +33,13 @@ pest()->extend(TestCase::class)
         app()->terminating(fn () => app()->forgetScopedInstances());
     })
     ->in('Browser');
+
+/**
+ * Reads a credential as the browser posts it, through the serializer the application binds.
+ *
+ * @param  array<string, mixed>  $credential
+ */
+function publicKeyCredential(array $credential): PublicKeyCredential
+{
+    return app(SerializerInterface::class)->deserialize(json_encode($credential, JSON_THROW_ON_ERROR), PublicKeyCredential::class, 'json');
+}

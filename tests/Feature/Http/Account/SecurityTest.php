@@ -29,15 +29,13 @@ it('lists the passkeys of the user, newest first', function (): void {
     $this->freezeTime();
     $user = User::factory()->create();
 
-    $oldest = Passkey::factory()->for($user)->create([
+    $oldest = Passkey::factory()->for($user)->withAaguid('fbfc3007-154e-4ecc-8c0b-6e020557d7bd')->create([
         'name' => 'iPhone',
-        'credential' => ['aaguid' => 'fbfc3007-154e-4ecc-8c0b-6e020557d7bd'],
         'created_at' => now()->subMonths(2),
         'last_used_at' => now()->subDays(3),
     ]);
-    $newest = Passkey::factory()->for($user)->create([
+    $newest = Passkey::factory()->for($user)->withAaguid('00000000-0000-0000-0000-000000000000')->create([
         'name' => 'Work laptop',
-        'credential' => ['aaguid' => '00000000-0000-0000-0000-000000000000'],
         'created_at' => now()->subHour(),
         'last_used_at' => null,
     ]);
@@ -54,7 +52,7 @@ it('lists the passkeys of the user, newest first', function (): void {
 
 it('names holders from the configuration, so a newer list renames existing passkeys', function (): void {
     $user = User::factory()->create();
-    Passkey::factory()->for($user)->create(['credential' => ['aaguid' => 'fbfc3007-154e-4ecc-8c0b-6e020557d7bd']]);
+    Passkey::factory()->for($user)->withAaguid('fbfc3007-154e-4ecc-8c0b-6e020557d7bd')->create();
 
     config(['passkeys.authenticators' => ['fbfc3007-154e-4ecc-8c0b-6e020557d7bd' => 'iCloud Keychain']]);
 
