@@ -16,10 +16,11 @@ final class DemoUserSeeder extends Seeder
             return;
         }
 
-        User::factory()->create([
+        // Without the factory: it needs Faker, which an environment installed with --no-dev lacks.
+        User::query()->create([
             'name' => 'Demo User',
             'email' => 'demo@example.com',
             'password' => 'password',
-        ]);
+        ])->markEmailAsVerified();
     }
 }
