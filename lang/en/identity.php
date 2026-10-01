@@ -14,4 +14,7 @@ return [
         'sent' => 'A new verification link was sent to your email address.',
         'verified' => 'Your email address is verified.',
     ],
+    'password' => [
+        'reset' => 'Your password is reset. Sign in with the new one.',
+    ],
 ];

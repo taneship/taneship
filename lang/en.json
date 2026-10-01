@@ -42,6 +42,12 @@
     "identity.verify_email.description": "Open the link we sent to your email address to verify it.",
     "identity.verify_email.resend": "Send the link again",
     "identity.verify_email.sign_out": "Sign out",
+    "identity.reset_password.title": "Reset your password",
+    "identity.reset_password.description": "Choose a new password for your account.",
+    "identity.reset_password.email": "Email address",
+    "identity.reset_password.password": "New password",
+    "identity.reset_password.password_confirmation": "Confirm new password",
+    "identity.reset_password.submit": "Reset password",
     "identity.user_menu.label": "User menu",
     "identity.user_menu.sign_out": "Sign out"
 }
