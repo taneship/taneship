@@ -130,3 +130,14 @@ it('validates the form', function (array $input, array $errors): void {
     'not an address' => [signUpInput(['email' => 'jane']), ['email']],
     'passwords that differ' => [signUpInput(['password_confirmation' => 'battery horse correct']), ['password']],
 ]);
+
+it('refuses a seventh request within a minute', function (): void {
+    // A sign-up that succeeds signs the browser in, and guest would answer before the limit does.
+    foreach (range(1, 6) as $request) {
+        $this->post(route('register.store'), [])->assertSessionHasErrors(['name', 'email', 'password']);
+    }
+
+    $this->post(route('register.store'), signUpInput())->assertTooManyRequests();
+
+    expect(User::query()->exists())->toBeFalse();
+});
