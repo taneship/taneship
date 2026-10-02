@@ -19,7 +19,8 @@ final class SignInWithPasskeyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'credential' => ['required', 'string'],
+            // A credential weighs a few kilobytes: webauthn-lib would spend its memory reading a larger string.
+            'credential' => ['required', 'string', 'max:16384'],
         ];
     }
 

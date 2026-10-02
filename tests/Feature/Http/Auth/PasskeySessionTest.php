@@ -139,6 +139,13 @@ it('validates the form', function (): void {
     $this->assertGuest();
 });
 
+it('refuses a credential too long to be one, without reading it', function (): void {
+    $this->post(route('login.passkey.store'), ['credential' => str_repeat('a', 16385)])
+        ->assertSessionHasErrors(['credential' => trans('validation.max.string', ['attribute' => 'credential', 'max' => 16384])]);
+
+    $this->assertGuest();
+});
+
 it('refuses an eleventh request within a minute', function (): void {
     $authenticator = new SoftwareAuthenticator;
     registerPasskeyOn($authenticator, User::factory()->create());

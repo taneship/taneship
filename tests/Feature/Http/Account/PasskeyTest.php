@@ -116,6 +116,14 @@ it('validates the form', function (array $input, array $errors): void {
     'a name too long' => [['name' => str_repeat('a', 256), 'credential' => '{}'], ['name']],
 ]);
 
+it('refuses a credential too long to be one, without reading it', function (): void {
+    $user = User::factory()->create();
+    signInWithConfirmedPassword($user);
+
+    $this->post(route('account.passkeys.store'), ['name' => 'MacBook Pro', 'credential' => str_repeat('a', 16385)])
+        ->assertSessionHasErrors(['credential' => trans('validation.max.string', ['attribute' => 'credential', 'max' => 16384])]);
+});
+
 it('removes the passkey, with a toast', function (): void {
     $user = User::factory()->create();
     $passkey = Passkey::factory()->for($user)->create();

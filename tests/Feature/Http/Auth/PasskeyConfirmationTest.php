@@ -131,6 +131,13 @@ it('validates the form', function (): void {
         ->assertSessionMissing('auth.password_confirmed_at');
 });
 
+it('refuses a credential too long to be one, without reading it', function (): void {
+    $this->actingAs(User::factory()->create())
+        ->post(route('password.confirm.passkey.store'), ['credential' => str_repeat('a', 16385)])
+        ->assertSessionHasErrors(['credential' => trans('validation.max.string', ['attribute' => 'credential', 'max' => 16384])])
+        ->assertSessionMissing('auth.password_confirmed_at');
+});
+
 it('confirms passwords for signed-in users only', function (): void {
     $this->post(route('password.confirm.passkey.store'))->assertRedirect(route('login'));
 });

@@ -20,7 +20,8 @@ final class RegisterPasskeyRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'credential' => ['required', 'string'],
+            // A credential weighs a few kilobytes: webauthn-lib would spend its memory reading a larger string.
+            'credential' => ['required', 'string', 'max:16384'],
         ];
     }
 
