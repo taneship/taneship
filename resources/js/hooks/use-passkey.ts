@@ -117,7 +117,7 @@ export function usePasskey() {
 
     async function authenticate(
         action: RouteDefinition<'post'>,
-        data: () => Record<string, boolean>,
+        data: () => Record<string, boolean> = () => ({}),
     ) {
         setFailure(undefined);
         setIsProcessing(true);

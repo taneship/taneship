@@ -61,6 +61,8 @@
     "identity.confirm_password.description": "This is a secure area. Enter your password to continue.",
     "identity.confirm_password.password": "Password",
     "identity.confirm_password.submit": "Confirm password",
+    "identity.confirm_password.or": "Or",
+    "identity.confirm_password.passkey": "Confirm with a passkey",
     "identity.account_layout.title": "Account settings",
     "identity.account_layout.description": "Manage your account and how you sign in.",
     "identity.account_layout.security": "Security",

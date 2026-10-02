@@ -60,3 +60,19 @@ it('signs in with a passkey from the suggestions of the email field', function (
 
     expect($user->passkeys()->sole()->last_used_at)->not->toBeNull();
 });
+
+it('confirms the password with a passkey', function (): void {
+    $user = User::factory()->create();
+
+    // Signing out ended the confirmation of the registration: the new session asks again.
+    registerPasskeyThenSignOut($user)
+        ->click(trans('identity.welcome.sign_in'))
+        ->assertPathIs('/dashboard')
+        ->click('[data-slot="sidebar-footer"] button')
+        ->click(trans('identity.user_menu.account_settings'))
+        ->assertPathIs('/confirm-password')
+        ->press(trans('identity.confirm_password.passkey'))
+        ->assertPathIs('/account/security')
+        ->assertSeeIn('section > ul', 'Chrome')
+        ->assertNoSmoke();
+});

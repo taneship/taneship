@@ -6,6 +6,7 @@ use App\Http\Controllers\Account\PasskeyController;
 use App\Http\Controllers\Account\SecurityController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\PasskeyConfirmationController;
 use App\Http\Controllers\Auth\PasskeySessionController;
 use App\Http\Controllers\Auth\PasswordConfirmationController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -47,6 +48,9 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/confirm-password', [PasswordConfirmationController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('password.confirm.store');
+    Route::post('/confirm-password/passkey', [PasskeyConfirmationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('password.confirm.passkey.store');
 });
 
 Route::middleware(['auth', 'verified', 'password.confirm'])->group(function (): void {

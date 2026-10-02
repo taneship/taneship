@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Passkey;
 use App\Models\User;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
@@ -20,7 +21,36 @@ it('renders the confirmation page for signed-in users', function (): void {
             ->where('isSidebarOpen', true)
             ->where('user', ['name' => $user->name, 'email' => $user->email])
             ->where('errors', [])
-            ->where('translations', json_decode(File::get(lang_path('en.json')), true)));
+            ->where('translations', json_decode(File::get(lang_path('en.json')), true))
+            ->where('hasPasskeys', false)
+            ->missing('passkeyOptions'));
+});
+
+it('tells the confirmation page that the user has a passkey', function (): void {
+    $user = User::factory()->create();
+    Passkey::factory()->for($user)->create();
+
+    $this->actingAs($user)
+        ->get(route('password.confirm'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page->where('hasPasskeys', true));
+});
+
+it('keeps the confirmation options in the session when the page asks for them', function (): void {
+    $user = User::factory()->create();
+    $passkeys = Passkey::factory()->for($user)->count(2)->create();
+    Passkey::factory()->create();
+
+    $this->actingAs($user);
+
+    $response = partialReload(route('password.confirm'), 'auth/confirm-password', 'passkeyOptions')
+        ->assertJsonMissingPath('props.hasPasskeys')
+        ->assertJsonPath('props.passkeyOptions', json_decode(session('passkeys.confirmation_options'), true))
+        ->assertJsonPath('props.passkeyOptions.rpId', parse_url(config('app.url'), PHP_URL_HOST))
+        ->assertJsonPath('props.passkeyOptions.userVerification', 'required');
+
+    // The passkeys of the user only: the browser offers no other.
+    expect(collect($response->json('props.passkeyOptions.allowCredentials'))->pluck('id')->sort()->values()->all())
+        ->toBe($passkeys->pluck('credential_id')->sort()->values()->all());
 });
 
 it('sends guests from the confirmation page to the sign-in page', function (): void {
