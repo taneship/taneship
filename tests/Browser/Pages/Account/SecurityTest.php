@@ -40,10 +40,10 @@ it('renders the security page with passkeys', function (string $mode, bool $isDa
         ->assertTitleContains(trans('identity.security.title'))
         ->assertSee(trans('identity.account_layout.title'))
         ->assertSeeIn('[aria-current="page"]', trans('identity.account_layout.security'))
-        ->assertSeeIn('section li:first-child', 'Work laptop')
-        ->assertSeeIn('section li:first-child', 'Added 1 hour ago · Never used')
-        ->assertSeeIn('section li:last-child', 'iPhone')
-        ->assertSeeIn('section li:last-child', 'Apple Passwords · Added 2 months ago · Last used 3 days ago')
+        ->assertSeeIn('[aria-labelledby="passkeys"] li:first-child', 'Work laptop')
+        ->assertSeeIn('[aria-labelledby="passkeys"] li:first-child', 'Added 1 hour ago · Never used')
+        ->assertSeeIn('[aria-labelledby="passkeys"] li:last-child', 'iPhone')
+        ->assertSeeIn('[aria-labelledby="passkeys"] li:last-child', 'Apple Passwords · Added 2 months ago · Last used 3 days ago')
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
@@ -59,6 +59,92 @@ it('renders the security page without passkeys', function (string $mode, bool $i
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('renders two-factor authentication disabled', function (string $mode, bool $isDark): void {
+    $this->actingAs(User::factory()->create());
+
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->assertAttribute('#app', 'data-server-rendered', 'true')
+        ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
+        ->assertSee(trans('identity.security.two_factor_authentication.title'))
+        ->assertSee(trans('identity.security.two_factor_authentication.enable'))
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('renders a pending two-factor setup', function (string $mode, bool $isDark): void {
+    $user = pendingTwoFactorUser();
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->assertAttribute('#app', 'data-server-rendered', 'true')
+        ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
+        ->assertVisible('img[alt="'.trans('identity.security.two_factor_authentication.qr_code').'"]')
+        ->assertScript('document.querySelector(\'[aria-labelledby="two-factor-authentication"] img\').naturalWidth', 192)
+        ->assertSee(trans('identity.security.two_factor_authentication.scan'))
+        ->assertSee((string) $user->two_factor_secret)
+        ->assertVisible('#code')
+        ->assertDontSee(trans('identity.security.two_factor_authentication.enable'))
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('renders two-factor authentication enabled', function (string $mode, bool $isDark): void {
+    $this->actingAs(User::factory()->withTwoFactorAuthentication()->create());
+
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->assertAttribute('#app', 'data-server-rendered', 'true')
+        ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
+        ->assertSee(trans('identity.security.two_factor_authentication.enabled'))
+        ->assertDontSee(trans('identity.security.two_factor_authentication.enable'))
+        ->assertMissing('#code')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('enables two-factor authentication with a first code, then shows the recovery codes', function (string $mode): void {
+    $this->freezeTime();
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    $page = confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->press(trans('identity.security.two_factor_authentication.enable'))
+        ->assertVisible('#code');
+
+    $user->refresh();
+
+    $page->type('code', twoFactorCode($user))
+        ->press(trans('identity.security.two_factor_authentication.confirm'))
+        ->assertSee(trans('identity.two_factor_authentication.enabled'))
+        ->assertSee(trans('identity.security.two_factor_authentication.recovery_codes.title'));
+
+    foreach ((array) $user->two_factor_recovery_codes as $recoveryCode) {
+        $page->assertSeeIn('[aria-labelledby="two-factor-authentication"] ul', (string) $recoveryCode);
+    }
+
+    $page->assertNoSmoke()->assertNoAccessibilityIssues(level: 3);
+
+    expect($user->refresh()->hasEnabledTwoFactorAuthentication())->toBeTrue();
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
+
+it('shows why a code is refused, and clears it', function (string $mode): void {
+    $this->freezeTime();
+    $user = pendingTwoFactorUser();
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->type('code', twoFactorCode($user, 2))
+        ->press(trans('identity.security.two_factor_authentication.confirm'))
+        ->assertSee(trans('identity.two_factor_authentication.invalid_code'))
+        ->assertValue('#code', '')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+
+    expect($user->refresh()->hasEnabledTwoFactorAuthentication())->toBeFalse();
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
 
 it('shows why the browser could not create the passkey', function (string $mode): void {
     $this->actingAs(User::factory()->create());
@@ -129,7 +215,7 @@ it('keeps the passkey when the removal is canceled', function (): void {
         ->click('[aria-label="Remove iPhone"]')
         ->press(trans('identity.security.passkeys.removal.cancel'))
         ->assertMissing('[role="alertdialog"]')
-        ->assertSeeIn('section > ul', 'iPhone')
+        ->assertSeeIn('[aria-labelledby="passkeys"] > ul', 'iPhone')
         ->assertNoSmoke();
 
     $this->assertModelExists($passkey);

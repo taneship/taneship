@@ -16,11 +16,6 @@ function registrationOptions(): PublicKeyCredentialCreationOptions
     return app(SerializerInterface::class)->deserialize(json_encode($options, JSON_THROW_ON_ERROR), PublicKeyCredentialCreationOptions::class, 'json');
 }
 
-function signInWithConfirmedPassword(User $user): void
-{
-    test()->actingAs($user)->withSession(['auth.password_confirmed_at' => time()]);
-}
-
 it('registers the passkey under its name, with a toast', function (): void {
     $user = User::factory()->create();
     signInWithConfirmedPassword($user);

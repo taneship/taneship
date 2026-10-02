@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\CreatePasskeyRegistrationOptions;
+use App\Actions\EnableTwoFactorAuthentication;
 use App\Actions\RegisterPasskey;
 use App\Data\PasskeyRegistrationData;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -62,6 +63,11 @@ function registerPasskeyOn(SoftwareAuthenticator $authenticator, User $user): Pa
     return app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', publicKeyCredential($authenticator->register($options))), $options);
 }
 
+function signInWithConfirmedPassword(User $user): void
+{
+    test()->actingAs($user)->withSession(['auth.password_confirmed_at' => time()]);
+}
+
 /**
  * Asks a page for some of its props, as router.reload({ only }) does. Inertia's own reloadOnly()
  * leaves out the X-Inertia header, so the root view renders with partial props, and fails.
@@ -87,4 +93,12 @@ function twoFactorCode(User $user, int $steps = 0): string
     $google2fa = app(Google2FA::class);
 
     return $google2fa->oathTotp((string) $user->two_factor_secret, intdiv(now()->getTimestamp(), $google2fa->getKeyRegeneration()) + $steps);
+}
+
+function pendingTwoFactorUser(): User
+{
+    $user = User::factory()->create();
+    app(EnableTwoFactorAuthentication::class)->handle($user);
+
+    return $user;
 }

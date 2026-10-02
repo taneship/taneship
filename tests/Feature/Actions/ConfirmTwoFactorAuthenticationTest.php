@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Actions\ConfirmTwoFactorAuthentication;
-use App\Actions\EnableTwoFactorAuthentication;
 use App\Actions\VerifyTwoFactorCode;
 use App\Exceptions\InvalidTwoFactorCodeException;
 use App\Exceptions\TwoFactorAuthenticationAlreadyEnabledException;
@@ -13,14 +12,6 @@ use Carbon\CarbonImmutable;
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-10-02 09:30:10'));
 });
-
-function pendingTwoFactorUser(): User
-{
-    $user = User::factory()->create();
-    app(EnableTwoFactorAuthentication::class)->handle($user);
-
-    return $user;
-}
 
 it('records the confirmation for a valid code', function (): void {
     $user = pendingTwoFactorUser();

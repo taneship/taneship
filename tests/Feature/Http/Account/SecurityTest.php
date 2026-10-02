@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use App\Models\Passkey;
 use App\Models\User;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia;
 
@@ -22,8 +26,53 @@ it('renders the security page for a user who confirmed their password', function
             ->where('user', ['name' => $user->name, 'email' => $user->email])
             ->where('errors', [])
             ->where('translations', json_decode(File::get(lang_path('en.json')), true))
+            ->where('hasEnabledTwoFactorAuthentication', false)
+            ->where('twoFactorSetup', null)
+            ->missing('recoveryCodes')
             ->where('passkeys', [])
             ->missing('passkeyOptions'));
+});
+
+it('shows the QR code and the setup key while a setup is pending', function (): void {
+    config(['app.name' => 'Acme Cloud']);
+    $user = User::factory()->withTwoFactorAuthentication()->create(['email' => 'jane@example.com', 'two_factor_confirmed_at' => null]);
+    $uri = "otpauth://totp/Acme%20Cloud:jane%40example.com?secret={$user->two_factor_secret}&issuer=Acme%20Cloud&algorithm=SHA1&digits=6&period=30";
+
+    signInWithConfirmedPassword($user);
+
+    $this->get(route('account.security.edit'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('hasEnabledTwoFactorAuthentication', false)
+            ->where('twoFactorSetup', [
+                'qrCode' => new Writer(new ImageRenderer(new RendererStyle(192), new SvgImageBackEnd))->writeString($uri),
+                'setupKey' => $user->two_factor_secret,
+            ]));
+});
+
+it('hides the setup once two-factor authentication is enabled', function (): void {
+    signInWithConfirmedPassword(User::factory()->withTwoFactorAuthentication()->create());
+
+    $this->get(route('account.security.edit'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('hasEnabledTwoFactorAuthentication', true)
+            ->where('twoFactorSetup', null));
+});
+
+it('gives the recovery codes when the page asks for them', function (): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+    signInWithConfirmedPassword($user);
+
+    partialReload(route('account.security.edit'), 'account/security', 'recoveryCodes')
+        ->assertJsonMissingPath('props.passkeys')
+        ->assertJsonMissingPath('props.twoFactorSetup')
+        ->assertJsonPath('props.recoveryCodes', $user->two_factor_recovery_codes);
+});
+
+it('gives no recovery codes before two-factor authentication is enabled', function (): void {
+    signInWithConfirmedPassword(pendingTwoFactorUser());
+
+    partialReload(route('account.security.edit'), 'account/security', 'recoveryCodes')
+        ->assertJsonPath('props.recoveryCodes', []);
 });
 
 it('lists the passkeys of the user, newest first', function (): void {

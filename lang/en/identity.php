@@ -25,6 +25,11 @@ return [
         'sent' => 'If an account uses this address, it will receive a link to reset its password.',
         'reset' => 'Your password is reset. Sign in with the new one.',
     ],
+    'two_factor_authentication' => [
+        'enabled' => 'Two-factor authentication is enabled.',
+        'already_enabled' => 'Two-factor authentication is already enabled.',
+        'invalid_code' => 'This code is not valid. Enter the code your authenticator app shows now.',
+    ],
     'passkeys' => [
         'added' => 'Your passkey is added.',
         'removed' => 'Your passkey is removed.',
