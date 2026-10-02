@@ -11,6 +11,7 @@
         "laravel/framework": "^13.34",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.21",
+        "pragmarx/google2fa": "^9.1",
         "web-auth/webauthn-lib": "^5.3.9"
     },
     "require-dev": {

@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Inertia\Support\Header;
+use PragmaRX\Google2FA\Google2FA;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
 use Tests\SoftwareAuthenticator;
@@ -75,4 +76,15 @@ function partialReload(string $url, string $component, string ...$props): TestRe
         Header::PARTIAL_COMPONENT => $component,
         Header::PARTIAL_ONLY => implode(',', $props),
     ]);
+}
+
+/**
+ * The code an authenticator app shows for the user's secret, at the current step or the given number of steps away.
+ * The step is read from now(), as the actions read it: google2fa's own clock ignores the time a test sets.
+ */
+function twoFactorCode(User $user, int $steps = 0): string
+{
+    $google2fa = app(Google2FA::class);
+
+    return $google2fa->oathTotp((string) $user->two_factor_secret, intdiv(now()->getTimestamp(), $google2fa->getKeyRegeneration()) + $steps);
 }
