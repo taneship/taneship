@@ -29,6 +29,12 @@ return [
         'enabled' => 'Two-factor authentication is enabled.',
         'already_enabled' => 'Two-factor authentication is already enabled.',
         'invalid_code' => 'This code is not valid. Enter the code your authenticator app shows now.',
+        'canceled' => 'The setup of two-factor authentication is canceled.',
+        'disabled' => 'Two-factor authentication is disabled.',
+        'not_enabled' => 'Two-factor authentication is not enabled.',
+        'recovery_codes' => [
+            'regenerated' => 'Your recovery codes are regenerated. The previous ones no longer work.',
+        ],
     ],
     'passkeys' => [
         'added' => 'Your passkey is added.',

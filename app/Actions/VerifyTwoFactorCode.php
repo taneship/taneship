@@ -12,6 +12,9 @@ use SensitiveParameter;
 
 final readonly class VerifyTwoFactorCode
 {
+    // Followed by the user's id.
+    public const string LAST_STEP_KEY_PREFIX = 'two_factor.last_step.';
+
     // One step either way, for a phone whose clock drifts.
     private const int WINDOW = 1;
 
@@ -23,7 +26,7 @@ final readonly class VerifyTwoFactorCode
             throw InvalidTwoFactorCodeException::for($user);
         }
 
-        $key = "two_factor.last_step.{$user->id}";
+        $key = self::LAST_STEP_KEY_PREFIX.$user->id;
         $lastStep = $this->cache->get($key);
 
         // google2fa reads its own clock, which ignores the time a test sets.

@@ -6,8 +6,6 @@ namespace App\Actions;
 
 use App\Exceptions\TwoFactorAuthenticationAlreadyEnabledException;
 use App\Models\User;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
 
 final readonly class EnableTwoFactorAuthentication
@@ -22,7 +20,7 @@ final readonly class EnableTwoFactorAuthentication
 
         // 32 base32 characters make 160 bits, the length RFC 4226 recommends.
         $user->two_factor_secret = $this->google2fa->generateSecretKey(32);
-        $user->two_factor_recovery_codes = Collection::times(8, fn (): string => Str::random(10).'-'.Str::random(10))->all();
+        $user->two_factor_recovery_codes = User::generateRecoveryCodes();
         $user->save();
     }
 }

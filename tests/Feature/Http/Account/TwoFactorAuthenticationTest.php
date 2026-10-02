@@ -111,9 +111,47 @@ it('validates the code', function (array $input): void {
     'not digits' => [['code' => '12345a']],
 ]);
 
+it('turns two-factor authentication off, with a toast', function (): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+    signInWithConfirmedPassword($user);
+
+    $this->from(route('account.security.edit'))
+        ->delete(route('account.two-factor-authentication.destroy'))
+        ->assertRedirect(route('account.security.edit'))
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => trans('identity.two_factor_authentication.disabled')]);
+
+    $user->refresh();
+
+    expect($user->two_factor_secret)->toBeNull()
+        ->and($user->two_factor_recovery_codes)->toBeNull()
+        ->and($user->hasEnabledTwoFactorAuthentication())->toBeFalse();
+});
+
+it('cancels a pending setup, with a toast', function (): void {
+    $user = pendingTwoFactorUser();
+    signInWithConfirmedPassword($user);
+
+    $this->from(route('account.security.edit'))
+        ->delete(route('account.two-factor-authentication.destroy'))
+        ->assertRedirect(route('account.security.edit'))
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => trans('identity.two_factor_authentication.canceled')]);
+
+    expect($user->refresh()->two_factor_secret)->toBeNull();
+});
+
+it('tells a user without two-factor authentication that it is off', function (): void {
+    signInWithConfirmedPassword(User::factory()->create());
+
+    $this->from(route('account.security.edit'))
+        ->delete(route('account.two-factor-authentication.destroy'))
+        ->assertRedirect(route('account.security.edit'))
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => trans('identity.two_factor_authentication.disabled')]);
+});
+
 dataset('two-factor authentication requests', [
     'setup' => ['post', fn (): string => route('account.two-factor-authentication.store')],
     'confirmation' => ['put', fn (): string => route('account.two-factor-authentication.update')],
+    'deactivation' => ['delete', fn (): string => route('account.two-factor-authentication.destroy')],
 ]);
 
 it('asks for the password first', function (string $method, string $url): void {

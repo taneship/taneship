@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Account\PasskeyController;
+use App\Http\Controllers\Account\RecoveryCodeController;
 use App\Http\Controllers\Account\SecurityController;
 use App\Http\Controllers\Account\TwoFactorAuthenticationController;
 use App\Http\Controllers\Auth\EmailVerificationController;
@@ -63,6 +64,10 @@ Route::middleware(['auth', 'verified', 'password.confirm'])->group(function (): 
         ->name('account.two-factor-authentication.store');
     Route::put('/account/two-factor-authentication', [TwoFactorAuthenticationController::class, 'update'])
         ->name('account.two-factor-authentication.update');
+    Route::delete('/account/two-factor-authentication', [TwoFactorAuthenticationController::class, 'destroy'])
+        ->name('account.two-factor-authentication.destroy');
+    Route::post('/account/two-factor-authentication/recovery-codes', [RecoveryCodeController::class, 'store'])
+        ->name('account.two-factor-authentication.recovery-codes.store');
     Route::post('/account/passkeys', [PasskeyController::class, 'store'])->name('account.passkeys.store');
     Route::delete('/account/passkeys/{passkey}', [PasskeyController::class, 'destroy'])
         ->can('delete', 'passkey')

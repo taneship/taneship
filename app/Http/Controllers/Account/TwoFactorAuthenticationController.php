@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Account;
 
 use App\Actions\ConfirmTwoFactorAuthentication;
+use App\Actions\DisableTwoFactorAuthentication;
 use App\Actions\EnableTwoFactorAuthentication;
 use App\Exceptions\InvalidTwoFactorCodeException;
 use App\Exceptions\TwoFactorAuthenticationAlreadyEnabledException;
@@ -46,6 +47,21 @@ final class TwoFactorAuthenticationController
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('identity.two_factor_authentication.enabled')]);
+
+        return back();
+    }
+
+    // Canceling a pending setup and turning two-factor authentication off discard the same columns: only the toast tells them apart.
+    public function destroy(#[CurrentUser] User $user, DisableTwoFactorAuthentication $disableTwoFactorAuthentication): RedirectResponse
+    {
+        $isPending = $user->two_factor_secret !== null && ! $user->hasEnabledTwoFactorAuthentication();
+
+        $disableTwoFactorAuthentication->handle($user);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $isPending ? __('identity.two_factor_authentication.canceled') : __('identity.two_factor_authentication.disabled'),
+        ]);
 
         return back();
     }

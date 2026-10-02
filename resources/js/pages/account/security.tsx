@@ -37,15 +37,24 @@ type AccountSecurityProps = {
 export default function AccountSecurity({
     hasEnabledTwoFactorAuthentication,
     twoFactorSetup,
-    recoveryCodes = [],
+    recoveryCodes,
     passkeys,
 }: AccountSecurityProps) {
     const { translate } = useTranslation();
     const { errors } = usePage().props;
     const ceremony = usePasskey();
     const [code, setCode] = useState('');
+    const [isCanceling, setIsCanceling] = useState(false);
     const [name, setName] = useState('');
     const [isRemoving, setIsRemoving] = useState(false);
+
+    function cancelTwoFactorSetup() {
+        router.delete(account.twoFactorAuthentication.destroy(), {
+            preserveScroll: true,
+            onStart: () => setIsCanceling(true),
+            onFinish: () => setIsCanceling(false),
+        });
+    }
 
     function addPasskey(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -79,27 +88,65 @@ export default function AccountSecurity({
                             <ShieldCheckIcon className="size-4 shrink-0 text-muted-foreground" />
                             {translate('identity.security.two_factor_authentication.enabled')}
                         </p>
-                        {recoveryCodes.length > 0 && (
-                            <div className="flex flex-col gap-3 rounded-lg border p-4">
-                                <div className="flex flex-col gap-1">
-                                    <h3 className="font-medium">
-                                        {translate(
-                                            'identity.security.two_factor_authentication.recovery_codes.title',
-                                        )}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        {translate(
-                                            'identity.security.two_factor_authentication.recovery_codes.description',
-                                        )}
-                                    </p>
-                                </div>
-                                <ul className="grid gap-1 font-mono text-sm sm:grid-cols-2">
-                                    {recoveryCodes.map((recoveryCode) => (
-                                        <li key={recoveryCode}>{recoveryCode}</li>
-                                    ))}
-                                </ul>
+                        <div className="flex flex-col gap-3 rounded-lg border p-4">
+                            <div className="flex flex-col gap-1">
+                                <h3 className="font-medium">
+                                    {translate(
+                                        'identity.security.two_factor_authentication.recovery_codes.title',
+                                    )}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {translate(
+                                        'identity.security.two_factor_authentication.recovery_codes.description',
+                                    )}
+                                </p>
                             </div>
-                        )}
+                            {recoveryCodes === undefined ? (
+                                <Button
+                                    variant="outline"
+                                    className="self-start"
+                                    onClick={() => router.reload({ only: ['recoveryCodes'] })}
+                                >
+                                    {translate(
+                                        'identity.security.two_factor_authentication.recovery_codes.show',
+                                    )}
+                                </Button>
+                            ) : (
+                                <>
+                                    <ul className="grid gap-1 font-mono text-sm sm:grid-cols-2">
+                                        {recoveryCodes.map((recoveryCode) => (
+                                            <li key={recoveryCode}>{recoveryCode}</li>
+                                        ))}
+                                    </ul>
+                                    {/* Asked for alone, the new codes replace the old ones in place: a full visit would leave them out. */}
+                                    <Form
+                                        action={account.twoFactorAuthentication.recoveryCodes.store()}
+                                        options={{ only: ['recoveryCodes'] }}
+                                    >
+                                        {({ processing }) => (
+                                            <Button
+                                                type="submit"
+                                                variant="outline"
+                                                disabled={processing}
+                                            >
+                                                {translate(
+                                                    'identity.security.two_factor_authentication.recovery_codes.regenerate',
+                                                )}
+                                            </Button>
+                                        )}
+                                    </Form>
+                                </>
+                            )}
+                        </div>
+                        <Form action={account.twoFactorAuthentication.destroy()}>
+                            {({ processing }) => (
+                                <Button type="submit" variant="destructive" disabled={processing}>
+                                    {translate(
+                                        'identity.security.two_factor_authentication.disable',
+                                    )}
+                                </Button>
+                            )}
+                        </Form>
                     </>
                 ) : twoFactorSetup === null ? (
                     <Form action={account.twoFactorAuthentication.store()}>
@@ -175,6 +222,16 @@ export default function AccountSecurity({
                                         <Button type="submit" disabled={processing}>
                                             {translate(
                                                 'identity.security.two_factor_authentication.confirm',
+                                            )}
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            disabled={isCanceling}
+                                            onClick={cancelTwoFactorSetup}
+                                        >
+                                            {translate(
+                                                'identity.security.two_factor_authentication.cancel',
                                             )}
                                         </Button>
                                     </Field>

@@ -85,6 +85,7 @@ it('renders a pending two-factor setup', function (string $mode, bool $isDark): 
         ->assertSee(trans('identity.security.two_factor_authentication.scan'))
         ->assertSee((string) $user->two_factor_secret)
         ->assertVisible('#code')
+        ->assertSee(trans('identity.security.two_factor_authentication.cancel'))
         ->assertDontSee(trans('identity.security.two_factor_authentication.enable'))
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
@@ -99,6 +100,9 @@ it('renders two-factor authentication enabled', function (string $mode, bool $is
         ->assertSee(trans('identity.security.two_factor_authentication.enabled'))
         ->assertDontSee(trans('identity.security.two_factor_authentication.enable'))
         ->assertMissing('#code')
+        ->assertSee(trans('identity.security.two_factor_authentication.recovery_codes.show'))
+        ->assertMissing('[aria-labelledby="two-factor-authentication"] ul')
+        ->assertSee(trans('identity.security.two_factor_authentication.disable'))
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
@@ -128,6 +132,74 @@ it('enables two-factor authentication with a first code, then shows the recovery
 
     expect($user->refresh()->hasEnabledTwoFactorAuthentication())->toBeTrue();
 })->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
+
+it('cancels a pending setup', function (): void {
+    $user = pendingTwoFactorUser();
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit')))
+        ->press(trans('identity.security.two_factor_authentication.cancel'))
+        ->assertSee(trans('identity.two_factor_authentication.canceled'))
+        ->assertSee(trans('identity.security.two_factor_authentication.enable'))
+        ->assertMissing('#code')
+        ->assertNoSmoke();
+
+    expect($user->refresh()->two_factor_secret)->toBeNull();
+});
+
+it('shows the recovery codes on request', function (string $mode): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+
+    $this->actingAs($user);
+
+    $page = confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->press(trans('identity.security.two_factor_authentication.recovery_codes.show'))
+        ->assertSee(trans('identity.security.two_factor_authentication.recovery_codes.regenerate'))
+        ->assertDontSee(trans('identity.security.two_factor_authentication.recovery_codes.show'));
+
+    foreach ((array) $user->two_factor_recovery_codes as $recoveryCode) {
+        $page->assertSeeIn('[aria-labelledby="two-factor-authentication"] ul', (string) $recoveryCode);
+    }
+
+    $page->assertNoSmoke()->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
+
+it('regenerates the recovery codes in place', function (): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+    $previousRecoveryCode = (string) $user->two_factor_recovery_codes[0];
+
+    $this->actingAs($user);
+
+    $page = confirmPassword(visit(route('account.security.edit')))
+        ->press(trans('identity.security.two_factor_authentication.recovery_codes.show'))
+        ->assertSeeIn('[aria-labelledby="two-factor-authentication"] ul', $previousRecoveryCode)
+        ->press(trans('identity.security.two_factor_authentication.recovery_codes.regenerate'))
+        ->assertSee(trans('identity.two_factor_authentication.recovery_codes.regenerated'));
+
+    $user->refresh();
+
+    foreach ((array) $user->two_factor_recovery_codes as $recoveryCode) {
+        $page->assertSeeIn('[aria-labelledby="two-factor-authentication"] ul', (string) $recoveryCode);
+    }
+
+    $page->assertDontSee($previousRecoveryCode)->assertNoSmoke();
+});
+
+it('disables two-factor authentication', function (): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit')))
+        ->press(trans('identity.security.two_factor_authentication.disable'))
+        ->assertSee(trans('identity.two_factor_authentication.disabled'))
+        ->assertSee(trans('identity.security.two_factor_authentication.enable'))
+        ->assertDontSee(trans('identity.security.two_factor_authentication.recovery_codes.title'))
+        ->assertNoSmoke();
+
+    expect($user->refresh()->two_factor_secret)->toBeNull();
+});
 
 it('shows why a code is refused, and clears it', function (string $mode): void {
     $this->freezeTime();
