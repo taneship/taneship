@@ -27,6 +27,7 @@ return [
     ],
     'passkeys' => [
         'added' => 'Your passkey is added.',
+        'removed' => 'Your passkey is removed.',
         'invalid' => 'Your passkey could not be verified. Try again.',
     ],
 ];

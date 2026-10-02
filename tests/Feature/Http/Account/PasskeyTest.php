@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Passkey;
 use App\Models\User;
 use Symfony\Component\Serializer\SerializerInterface;
 use Tests\SoftwareAuthenticator;
@@ -115,18 +116,45 @@ it('validates the form', function (array $input, array $errors): void {
     'a name too long' => [['name' => str_repeat('a', 256), 'credential' => '{}'], ['name']],
 ]);
 
-it('asks for the password first', function (): void {
-    $this->actingAs(User::factory()->create())
-        ->post(route('account.passkeys.store'))
-        ->assertRedirect(route('password.confirm'));
+it('removes the passkey, with a toast', function (): void {
+    $user = User::factory()->create();
+    $passkey = Passkey::factory()->for($user)->create();
+    signInWithConfirmedPassword($user);
+
+    $this->from(route('account.security.edit'))
+        ->delete(route('account.passkeys.destroy', $passkey))
+        ->assertRedirect(route('account.security.edit'))
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => trans('identity.passkeys.removed')]);
+
+    $this->assertModelMissing($passkey);
 });
 
-it('sends unverified users to the verification notice', function (): void {
+it('refuses to remove the passkey of another user', function (): void {
+    $passkey = Passkey::factory()->create();
+    signInWithConfirmedPassword(User::factory()->create());
+
+    $this->delete(route('account.passkeys.destroy', $passkey))->assertForbidden();
+
+    $this->assertModelExists($passkey);
+});
+
+dataset('passkey requests', [
+    'registration' => ['post', fn (): string => route('account.passkeys.store')],
+    'removal' => ['delete', fn (): string => route('account.passkeys.destroy', Passkey::factory()->create())],
+]);
+
+it('asks for the password first', function (string $method, string $url): void {
+    $this->actingAs(User::factory()->create())
+        ->{$method}($url)
+        ->assertRedirect(route('password.confirm'));
+})->with('passkey requests');
+
+it('sends unverified users to the verification notice', function (string $method, string $url): void {
     signInWithConfirmedPassword(User::factory()->unverified()->create());
 
-    $this->post(route('account.passkeys.store'))->assertRedirect(route('verification.notice'));
-});
+    $this->{$method}($url)->assertRedirect(route('verification.notice'));
+})->with('passkey requests');
 
-it('sends guests to the sign-in page', function (): void {
-    $this->post(route('account.passkeys.store'))->assertRedirect(route('login'));
-});
+it('sends guests to the sign-in page', function (string $method, string $url): void {
+    $this->{$method}($url)->assertRedirect(route('login'));
+})->with('passkey requests');

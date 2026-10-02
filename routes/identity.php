@@ -48,4 +48,7 @@ Route::middleware('auth')->group(function (): void {
 Route::middleware(['auth', 'verified', 'password.confirm'])->group(function (): void {
     Route::get('/account/security', [SecurityController::class, 'edit'])->name('account.security.edit');
     Route::post('/account/passkeys', [PasskeyController::class, 'store'])->name('account.passkeys.store');
+    Route::delete('/account/passkeys/{passkey}', [PasskeyController::class, 'destroy'])
+        ->can('delete', 'passkey')
+        ->name('account.passkeys.destroy');
 });

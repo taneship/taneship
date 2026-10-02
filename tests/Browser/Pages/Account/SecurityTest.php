@@ -73,6 +73,54 @@ it('shows why the browser could not create the passkey', function (string $mode)
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
 
+it('asks before removing a passkey', function (string $mode, bool $isDark): void {
+    $user = User::factory()->create();
+    Passkey::factory()->for($user)->create(['name' => 'iPhone']);
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->click('[aria-label="Remove iPhone"]')
+        ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
+        ->assertSeeIn('[role="alertdialog"]', 'Remove iPhone?')
+        ->assertSeeIn('[role="alertdialog"]', trans('identity.security.passkeys.removal.description'))
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('removes a passkey once confirmed', function (): void {
+    $user = User::factory()->create();
+    $passkey = Passkey::factory()->for($user)->create(['name' => 'iPhone']);
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit')))
+        ->click('[aria-label="Remove iPhone"]')
+        ->press(trans('identity.security.passkeys.removal.confirm'))
+        ->assertSee(trans('identity.passkeys.removed'))
+        ->assertSee(trans('identity.security.passkeys.empty'))
+        ->assertMissing('[role="alertdialog"]')
+        ->assertNoSmoke();
+
+    $this->assertModelMissing($passkey);
+});
+
+it('keeps the passkey when the removal is canceled', function (): void {
+    $user = User::factory()->create();
+    $passkey = Passkey::factory()->for($user)->create(['name' => 'iPhone']);
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit')))
+        ->click('[aria-label="Remove iPhone"]')
+        ->press(trans('identity.security.passkeys.removal.cancel'))
+        ->assertMissing('[role="alertdialog"]')
+        ->assertSeeIn('section > ul', 'iPhone')
+        ->assertNoSmoke();
+
+    $this->assertModelExists($passkey);
+});
+
 it('renders the security page on mobile', function (): void {
     $user = User::factory()->create();
     Passkey::factory()->for($user)->create(['name' => 'iPhone']);

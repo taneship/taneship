@@ -1,9 +1,20 @@
-import { Head, usePage } from '@inertiajs/react';
-import { KeyRoundIcon } from 'lucide-react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { KeyRoundIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
 import { InputField } from '@/components/input-field';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup } from '@/components/ui/field';
 import { usePasskey } from '@/hooks/use-passkey';
@@ -22,10 +33,20 @@ export default function AccountSecurity({ passkeys }: AccountSecurityProps) {
     const { errors } = usePage().props;
     const passkey = usePasskey();
     const [name, setName] = useState('');
+    const [isRemoving, setIsRemoving] = useState(false);
 
     function addPasskey(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         void passkey.register(account.passkeys.store(), { name }, () => setName(''));
+    }
+
+    // The passkey leaves the list on success, and its dialog with it.
+    function removePasskey(passkey: Passkey) {
+        router.delete(account.passkeys.destroy(passkey.id), {
+            preserveScroll: true,
+            onStart: () => setIsRemoving(true),
+            onFinish: () => setIsRemoving(false),
+        });
     }
 
     return (
@@ -51,7 +72,7 @@ export default function AccountSecurity({ passkeys }: AccountSecurityProps) {
                                 <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                                     <KeyRoundIcon className="size-5 text-muted-foreground" />
                                 </span>
-                                <div className="grid min-w-0 gap-1">
+                                <div className="grid min-w-0 flex-1 gap-1">
                                     <p className="truncate font-medium">{passkey.name}</p>
                                     {/* Each detail stays on one line: a narrow screen wraps between them. */}
                                     <p className="text-sm text-muted-foreground">
@@ -79,6 +100,49 @@ export default function AccountSecurity({ passkeys }: AccountSecurityProps) {
                                         </span>
                                     </p>
                                 </div>
+                                <AlertDialog>
+                                    <AlertDialogTrigger
+                                        render={<Button variant="ghost" size="icon" />}
+                                        aria-label={translate('identity.security.passkeys.remove', {
+                                            name: passkey.name,
+                                        })}
+                                    >
+                                        <Trash2Icon />
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle className="wrap-anywhere">
+                                                {translate(
+                                                    'identity.security.passkeys.removal.title',
+                                                    {
+                                                        name: passkey.name,
+                                                    },
+                                                )}
+                                            </AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                {translate(
+                                                    'identity.security.passkeys.removal.description',
+                                                )}
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>
+                                                {translate(
+                                                    'identity.security.passkeys.removal.cancel',
+                                                )}
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                                variant="destructive"
+                                                disabled={isRemoving}
+                                                onClick={() => removePasskey(passkey)}
+                                            >
+                                                {translate(
+                                                    'identity.security.passkeys.removal.confirm',
+                                                )}
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </li>
                         ))}
                     </ul>
