@@ -25,6 +25,15 @@ final readonly class VerifyPasskey
             throw InvalidPasskeyAssertionException::because('the credential answers no authentication.');
         }
 
+        // webauthn-lib lets both pass: the client data of a registration, and a page framed by another site.
+        if ($credential->response->clientDataJSON->type !== 'webauthn.get') {
+            throw InvalidPasskeyAssertionException::because('the client data answer no authentication.');
+        }
+
+        if ($credential->response->clientDataJSON->crossOrigin) {
+            throw InvalidPasskeyAssertionException::because('the ceremony ran in a page framed by another site.');
+        }
+
         // In base64url, as the passkey stores it.
         $credentialId = rtrim(strtr(base64_encode($credential->rawId), '+/', '-_'), '=');
 

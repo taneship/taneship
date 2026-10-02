@@ -24,6 +24,15 @@ final readonly class RegisterPasskey
             throw InvalidPasskeyAttestationException::because('the credential answers no registration.');
         }
 
+        // webauthn-lib lets both pass: the client data of an authentication, and a page framed by another site.
+        if ($registration->credential->response->clientDataJSON->type !== 'webauthn.create') {
+            throw InvalidPasskeyAttestationException::because('the client data answer no registration.');
+        }
+
+        if ($registration->credential->response->clientDataJSON->crossOrigin) {
+            throw InvalidPasskeyAttestationException::because('the ceremony ran in a page framed by another site.');
+        }
+
         try {
             $record = $this->attestationValidator->check($registration->credential->response, $options, (string) $options->rp->id);
         } catch (Throwable $exception) {

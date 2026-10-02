@@ -60,6 +60,28 @@ it('refuses an attestation made on another origin', function (): void {
     expect(Passkey::query()->exists())->toBeFalse();
 });
 
+it('refuses an attestation whose client data are those of an authentication', function (): void {
+    $user = User::factory()->create();
+    $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
+    $credential = publicKeyCredential(new SoftwareAuthenticator()->register($options, type: 'webauthn.get'));
+
+    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), $options))
+        ->toThrow(InvalidPasskeyAttestationException::class, 'the client data answer no registration.');
+
+    expect(Passkey::query()->exists())->toBeFalse();
+});
+
+it('refuses an attestation made in a page framed by another site', function (): void {
+    $user = User::factory()->create();
+    $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
+    $credential = publicKeyCredential(new SoftwareAuthenticator()->register($options, isCrossOrigin: true));
+
+    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), $options))
+        ->toThrow(InvalidPasskeyAttestationException::class, 'the ceremony ran in a page framed by another site.');
+
+    expect(Passkey::query()->exists())->toBeFalse();
+});
+
 it('refuses an assertion', function (): void {
     $user = User::factory()->create();
     $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);

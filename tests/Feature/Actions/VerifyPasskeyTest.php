@@ -92,6 +92,28 @@ it('refuses an assertion made on another origin', function (): void {
         ->toThrow(InvalidPasskeyAssertionException::class, 'Invalid origin.');
 });
 
+it('refuses an assertion whose client data are those of a registration', function (): void {
+    $authenticator = new SoftwareAuthenticator;
+    $passkey = registerPasskeyOn($authenticator, User::factory()->create());
+    $options = app(CreatePasskeyAuthenticationOptions::class)->handle();
+
+    expect(fn (): Passkey => app(VerifyPasskey::class)->handle(publicKeyCredential($authenticator->authenticate($options, type: 'webauthn.create')), $options))
+        ->toThrow(InvalidPasskeyAssertionException::class, 'the client data answer no authentication.');
+
+    expect($passkey->refresh()->last_used_at)->toBeNull();
+});
+
+it('refuses an assertion made in a page framed by another site', function (): void {
+    $authenticator = new SoftwareAuthenticator;
+    $passkey = registerPasskeyOn($authenticator, User::factory()->create());
+    $options = app(CreatePasskeyAuthenticationOptions::class)->handle();
+
+    expect(fn (): Passkey => app(VerifyPasskey::class)->handle(publicKeyCredential($authenticator->authenticate($options, isCrossOrigin: true)), $options))
+        ->toThrow(InvalidPasskeyAssertionException::class, 'the ceremony ran in a page framed by another site.');
+
+    expect($passkey->refresh()->last_used_at)->toBeNull();
+});
+
 it('refuses an assertion made for another challenge', function (): void {
     $authenticator = new SoftwareAuthenticator;
     registerPasskeyOn($authenticator, User::factory()->create());

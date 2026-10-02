@@ -41,7 +41,7 @@ final class SoftwareAuthenticator
     /**
      * @return array{id: string, rawId: string, type: string, response: array{clientDataJSON: string, attestationObject: string, transports: list<string>}, clientExtensionResults: array{}, authenticatorAttachment: string}
      */
-    public function register(PublicKeyCredentialCreationOptions $options, ?string $origin = null): array
+    public function register(PublicKeyCredentialCreationOptions $options, ?string $origin = null, string $type = 'webauthn.create', bool $isCrossOrigin = false): array
     {
         $privateKey = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
 
@@ -69,7 +69,7 @@ final class SoftwareAuthenticator
             'rawId' => $this->base64Url($this->credentialId),
             'type' => 'public-key',
             'response' => [
-                'clientDataJSON' => $this->base64Url($this->clientData('webauthn.create', $options->challenge, $origin)),
+                'clientDataJSON' => $this->base64Url($this->clientData($type, $options->challenge, $origin, $isCrossOrigin)),
                 'attestationObject' => $this->base64Url((string) $attestationObject),
                 'transports' => ['internal'],
             ],
@@ -81,7 +81,7 @@ final class SoftwareAuthenticator
     /**
      * @return array{id: string, rawId: string, type: string, response: array{clientDataJSON: string, authenticatorData: string, signature: string, userHandle: string}, clientExtensionResults: array{}, authenticatorAttachment: string}
      */
-    public function authenticate(PublicKeyCredentialRequestOptions $options, ?string $origin = null): array
+    public function authenticate(PublicKeyCredentialRequestOptions $options, ?string $origin = null, string $type = 'webauthn.get', bool $isCrossOrigin = false): array
     {
         if (! $this->privateKey instanceof OpenSSLAsymmetricKey) {
             throw new RuntimeException('The authenticator holds no credential: register one first.');
@@ -91,7 +91,7 @@ final class SoftwareAuthenticator
         $this->counter++;
 
         $authenticatorData = $this->authenticatorData((string) $options->rpId);
-        $clientData = $this->clientData('webauthn.get', $options->challenge, $origin);
+        $clientData = $this->clientData($type, $options->challenge, $origin, $isCrossOrigin);
 
         openssl_sign($authenticatorData.hash('sha256', $clientData, true), $signature, $this->privateKey, OPENSSL_ALGO_SHA256);
 
@@ -117,13 +117,13 @@ final class SoftwareAuthenticator
             .pack('N', $this->counter);
     }
 
-    private function clientData(string $type, string $challenge, ?string $origin): string
+    private function clientData(string $type, string $challenge, ?string $origin, bool $isCrossOrigin): string
     {
         return json_encode([
             'type' => $type,
             'challenge' => $this->base64Url($challenge),
             'origin' => $origin ?? Config::string('app.url'),
-            'crossOrigin' => false,
+            'crossOrigin' => $isCrossOrigin,
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
     }
 
