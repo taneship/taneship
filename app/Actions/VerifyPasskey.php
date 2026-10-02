@@ -36,8 +36,7 @@ final readonly class VerifyPasskey
             throw InvalidPasskeyAssertionException::because('the ceremony ran in a page framed by another site.');
         }
 
-        // In base64url, as the passkey stores it.
-        $credentialId = rtrim(strtr(base64_encode($credential->rawId), '+/', '-_'), '=');
+        $credentialId = Passkey::credentialIdFrom($credential->rawId);
 
         $passkey = Passkey::query()->firstWhere('credential_id', $credentialId)
             ?? throw UnknownPasskeyException::for($credentialId);

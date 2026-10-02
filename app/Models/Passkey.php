@@ -29,6 +29,14 @@ final class Passkey extends Model
     use HasFactory;
 
     /**
+     * The id of a credential as the credential_id column holds it: in base64url, as webauthn-lib writes it in the record.
+     */
+    public static function credentialIdFrom(string $rawId): string
+    {
+        return rtrim(strtr(base64_encode($rawId), '+/', '-_'), '=');
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -45,8 +53,8 @@ final class Passkey extends Model
             get: fn (mixed $credential): CredentialRecord => app(SerializerInterface::class)->deserialize($credential, CredentialRecord::class, 'json'),
             set: fn (CredentialRecord $record): array => [
                 'credential' => app(SerializerInterface::class)->serialize($record, 'json'),
-                // Lookups and the unique index need the id in a column of its own: base64url, as the record writes it.
-                'credential_id' => rtrim(strtr(base64_encode($record->publicKeyCredentialId), '+/', '-_'), '='),
+                // Lookups and the unique index need the id in a column of its own.
+                'credential_id' => self::credentialIdFrom($record->publicKeyCredentialId),
             ],
         );
     }
