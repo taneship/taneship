@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegistrationController;
 use App\Http\Controllers\Auth\SessionController;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function (): void {
@@ -60,3 +61,8 @@ Route::middleware(['auth', 'verified', 'password.confirm'])->group(function (): 
         ->can('delete', 'passkey')
         ->name('account.passkeys.destroy');
 });
+
+Route::get('/.well-known/passkey-endpoints', fn (): JsonResponse => response()->json([
+    'enroll' => route('account.security.edit'),
+    'manage' => route('account.security.edit'),
+]))->name('well-known.passkey-endpoints');
