@@ -155,7 +155,9 @@ export default function AccountSecurity({ passkeys }: AccountSecurityProps) {
                                 label={translate('identity.security.passkeys.name')}
                                 error={errors.name}
                                 value={name}
-                                onChange={(event) => setName(event.target.value)}
+                                // The server trims the name. Made of spaces, it would pass as filled here,
+                                // and be refused there once the authenticator holds the passkey.
+                                onChange={(event) => setName(event.target.value.trimStart())}
                                 autoComplete="off"
                                 maxLength={255}
                                 required

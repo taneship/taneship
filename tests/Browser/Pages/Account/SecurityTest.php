@@ -73,6 +73,20 @@ it('shows why the browser could not create the passkey', function (string $mode)
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
 
+it('starts no ceremony for a name made of spaces', function (): void {
+    $this->actingAs(User::factory()->create());
+
+    // The browser stops the form at its empty required field, before the page asks for the options.
+    confirmPassword(visit(route('account.security.edit')))
+        ->type('name', '   ')
+        ->assertValue('#name', '')
+        ->press(trans('identity.security.passkeys.add'))
+        ->assertScript('document.querySelector("#name").matches(":invalid")')
+        ->assertScript('history.state.page.props.passkeyOptions === undefined')
+        ->assertDontSee(trans('identity.use_passkey.not_created'))
+        ->assertNoSmoke();
+});
+
 it('asks before removing a passkey', function (string $mode, bool $isDark): void {
     $user = User::factory()->create();
     Passkey::factory()->for($user)->create(['name' => 'iPhone']);

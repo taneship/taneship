@@ -114,6 +114,7 @@ it('validates the form', function (array $input, array $errors): void {
 })->with([
     'empty' => [[], ['name', 'credential']],
     'a name too long' => [['name' => str_repeat('a', 256), 'credential' => '{}'], ['name']],
+    'a name made of spaces' => [['name' => '   ', 'credential' => '{}'], ['name']],
 ]);
 
 it('refuses a credential too long to be one, without reading it', function (): void {
