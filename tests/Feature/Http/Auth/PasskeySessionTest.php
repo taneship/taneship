@@ -34,6 +34,18 @@ it('signs the owner of the passkey in and leads to the dashboard', function (): 
         ->and($passkey->last_used_at?->equalTo(now()))->toBeTrue();
 });
 
+it('skips the two-factor challenge', function (): void {
+    $authenticator = new SoftwareAuthenticator;
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+    registerPasskeyOn($authenticator, $user);
+
+    $this->post(route('login.passkey.store'), ['credential' => json_encode($authenticator->authenticate(authenticationOptions()))])
+        ->assertRedirect(route('dashboard'))
+        ->assertSessionMissing('pending_sign_in');
+
+    $this->assertAuthenticatedAs($user);
+});
+
 it('leads to the intended url after signing in', function (): void {
     $authenticator = new SoftwareAuthenticator;
     registerPasskeyOn($authenticator, User::factory()->create());

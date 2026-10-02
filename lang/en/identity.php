@@ -34,6 +34,7 @@ return [
         'not_enabled' => 'Two-factor authentication is not enabled.',
         'recovery_codes' => [
             'regenerated' => 'Your recovery codes are regenerated. The previous ones no longer work.',
+            'invalid' => 'This recovery code is not valid, or was already used.',
         ],
     ],
     'passkeys' => [

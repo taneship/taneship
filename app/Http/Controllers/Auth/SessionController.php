@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Actions\CreatePasskeyAuthenticationOptions;
 use App\Http\PasskeyCeremony;
 use App\Http\Requests\Auth\SignInRequest;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,6 +64,13 @@ final class SessionController
         // Auth::attempt() would rehash too: stored hashes follow the hashing options as users sign in.
         if (Config::boolean('hashing.rehash_on_login')) {
             Auth::getProvider()->rehashPasswordIfRequired($user, $credentials);
+        }
+
+        // The password alone does not sign this user in: the challenge does, with what it keeps here.
+        if ($user instanceof User && $user->hasEnabledTwoFactorAuthentication()) {
+            $request->session()->put('pending_sign_in', ['user_id' => $user->id, 'remember' => $signIn->remember]);
+
+            return to_route('two-factor-challenge.create');
         }
 
         Auth::login($user, $signIn->remember);

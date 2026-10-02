@@ -92,6 +92,27 @@ it('remembers the user when asked', function (): void {
     $this->assertAuthenticatedAs($user);
 });
 
+it('keeps a pending sign-in for users with two-factor authentication, and leads to the challenge', function (bool $remember): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+
+    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password', 'remember' => $remember])
+        ->assertRedirect(route('two-factor-challenge.create'))
+        ->assertSessionHas('pending_sign_in', ['user_id' => $user->id, 'remember' => $remember])
+        ->assertCookieMissing(Auth::guard()->getRecallerName());
+
+    $this->assertGuest();
+})->with(['not remembered' => false, 'remembered' => true]);
+
+it('ignores a pending two-factor setup', function (): void {
+    $user = pendingTwoFactorUser();
+
+    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password'])
+        ->assertRedirect(route('dashboard'))
+        ->assertSessionMissing('pending_sign_in');
+
+    $this->assertAuthenticatedAs($user);
+});
+
 it('compares email addresses in lowercase', function (): void {
     $user = User::factory()->create(['email' => 'jane@example.com']);
 
