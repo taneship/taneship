@@ -7,11 +7,11 @@ namespace App\Http\Controllers\Auth;
 use App\Actions\VerifyPasskey;
 use App\Exceptions\InvalidPasskeyAssertionException;
 use App\Exceptions\UnknownPasskeyException;
+use App\Http\PasskeyCeremony;
 use App\Http\Requests\Auth\SignInWithPasskeyRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\Serializer\SerializerInterface;
 use Webauthn\PublicKeyCredentialRequestOptions;
 
 final class PasskeySessionController
@@ -19,19 +19,13 @@ final class PasskeySessionController
     public function store(
         SignInWithPasskeyRequest $request,
         VerifyPasskey $verifyPasskey,
-        SerializerInterface $serializer,
+        PasskeyCeremony $passkeyCeremony,
     ): RedirectResponse {
         $signIn = $request->toData();
-
-        // Pulled, so that a ceremony serves once: a replayed assertion finds no options.
-        $options = $request->session()->pull('passkeys.authentication_options');
-
-        if (! is_string($options)) {
-            throw ValidationException::withMessages(['credential' => __('identity.passkeys.invalid')]);
-        }
+        $options = $passkeyCeremony->finish(PasskeyCeremony::SIGN_IN, PublicKeyCredentialRequestOptions::class);
 
         try {
-            $passkey = $verifyPasskey->handle($signIn->credential, $serializer->deserialize($options, PublicKeyCredentialRequestOptions::class, 'json'));
+            $passkey = $verifyPasskey->handle($signIn->credential, $options);
         } catch (InvalidPasskeyAssertionException|UnknownPasskeyException) {
             throw ValidationException::withMessages(['credential' => __('identity.passkeys.invalid')]);
         }

@@ -8,6 +8,7 @@ use App\Actions\DeletePasskey;
 use App\Actions\RegisterPasskey;
 use App\Exceptions\InvalidPasskeyAttestationException;
 use App\Exceptions\PasskeyAlreadyRegisteredException;
+use App\Http\PasskeyCeremony;
 use App\Http\Requests\Account\RegisterPasskeyRequest;
 use App\Models\Passkey;
 use App\Models\User;
@@ -15,7 +16,6 @@ use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
-use Symfony\Component\Serializer\SerializerInterface;
 use Webauthn\PublicKeyCredentialCreationOptions;
 
 final class PasskeyController
@@ -24,19 +24,13 @@ final class PasskeyController
         RegisterPasskeyRequest $request,
         #[CurrentUser] User $user,
         RegisterPasskey $registerPasskey,
-        SerializerInterface $serializer,
+        PasskeyCeremony $passkeyCeremony,
     ): RedirectResponse {
         $registration = $request->toData();
-
-        // Pulled, so that a ceremony serves once: a replayed credential finds no options.
-        $options = $request->session()->pull('passkeys.registration_options');
-
-        if (! is_string($options)) {
-            throw ValidationException::withMessages(['credential' => __('identity.passkeys.invalid')]);
-        }
+        $options = $passkeyCeremony->finish(PasskeyCeremony::REGISTRATION, PublicKeyCredentialCreationOptions::class);
 
         try {
-            $registerPasskey->handle($user, $registration, $serializer->deserialize($options, PublicKeyCredentialCreationOptions::class, 'json'));
+            $registerPasskey->handle($user, $registration, $options);
         } catch (InvalidPasskeyAttestationException|PasskeyAlreadyRegisteredException) {
             throw ValidationException::withMessages(['credential' => __('identity.passkeys.invalid')]);
         }
