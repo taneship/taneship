@@ -10,6 +10,8 @@ use App\Exceptions\PasskeyOfAnotherUserException;
 use App\Exceptions\UnknownPasskeyException;
 use App\Models\Passkey;
 use App\Models\User;
+use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\Log;
 use Tests\SoftwareAuthenticator;
 
 it('finds the passkey of a valid assertion', function (): void {
@@ -146,6 +148,40 @@ it('refuses a replayed assertion, whose counter did not move', function (): void
 
     expect(fn (): Passkey => app(VerifyPasskey::class)->handle($credential, $options))
         ->toThrow(InvalidPasskeyAssertionException::class, 'Invalid counter.');
+});
+
+it('logs a counter that did not move, the sign of a copied passkey', function (): void {
+    $logged = [];
+    Log::listen(function (MessageLogged $message) use (&$logged): void {
+        $logged[] = [$message->level, $message->message, $message->context];
+    });
+    $authenticator = new SoftwareAuthenticator;
+    $passkey = registerPasskeyOn($authenticator, User::factory()->create());
+    $options = app(CreatePasskeyAuthenticationOptions::class)->handle();
+    $credential = publicKeyCredential($authenticator->authenticate($options));
+    app(VerifyPasskey::class)->handle($credential, $options);
+
+    expect(fn (): Passkey => app(VerifyPasskey::class)->handle($credential, $options))
+        ->toThrow(InvalidPasskeyAssertionException::class);
+
+    expect($logged)->toBe([
+        ['warning', 'A passkey answered with a counter that did not move: it may have been copied.', ['passkey' => $passkey->id]],
+    ]);
+});
+
+it('logs no other failure', function (): void {
+    $logged = [];
+    Log::listen(function (MessageLogged $message) use (&$logged): void {
+        $logged[] = $message->message;
+    });
+    $authenticator = new SoftwareAuthenticator;
+    registerPasskeyOn($authenticator, User::factory()->create());
+    $options = app(CreatePasskeyAuthenticationOptions::class)->handle();
+
+    expect(fn (): Passkey => app(VerifyPasskey::class)->handle(publicKeyCredential($authenticator->authenticate($options, 'https://evil.example')), $options))
+        ->toThrow(InvalidPasskeyAssertionException::class);
+
+    expect($logged)->toBe([]);
 });
 
 it('refuses an attestation', function (): void {
