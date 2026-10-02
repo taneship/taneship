@@ -149,3 +149,18 @@ it('refuses a seventh request within a minute', function (): void {
         ->assertTooManyRequests()
         ->assertSessionMissing('auth.password_confirmed_at');
 });
+
+it('counts its requests apart from those of the password form', function (): void {
+    $authenticator = new SoftwareAuthenticator;
+    $user = User::factory()->create();
+    registerPasskeyOn($authenticator, $user);
+    $this->actingAs($user);
+
+    foreach (range(1, 6) as $attempt) {
+        $this->post(route('password.confirm.store'), ['password' => 'wrong-password'])->assertSessionHasErrors(['password']);
+    }
+
+    $this->post(route('password.confirm.passkey.store'), ['credential' => json_encode($authenticator->authenticate(confirmationOptions()))])
+        ->assertRedirect(route('dashboard'))
+        ->assertSessionHas('auth.password_confirmed_at');
+});

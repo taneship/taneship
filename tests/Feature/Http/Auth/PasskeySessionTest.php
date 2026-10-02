@@ -154,6 +154,15 @@ it('refuses an eleventh request within a minute', function (): void {
     $this->assertGuest();
 });
 
+it('counts its requests apart from those of the other forms', function (): void {
+    foreach (range(1, 6) as $request) {
+        $this->post(route('login.passkey.store'))->assertSessionHasErrors(['credential']);
+    }
+
+    // The forgot-password form allows six requests a minute of its own.
+    $this->post(route('password.email'))->assertSessionHasErrors(['email']);
+});
+
 it('sends signed-in users to the dashboard', function (): void {
     $this->actingAs(User::factory()->create())
         ->post(route('login.passkey.store'))
