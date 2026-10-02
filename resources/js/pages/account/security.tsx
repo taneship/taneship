@@ -31,13 +31,13 @@ type AccountSecurityProps = {
 export default function AccountSecurity({ passkeys }: AccountSecurityProps) {
     const { translate } = useTranslation();
     const { errors } = usePage().props;
-    const passkey = usePasskey();
+    const ceremony = usePasskey();
     const [name, setName] = useState('');
     const [isRemoving, setIsRemoving] = useState(false);
 
     function addPasskey(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        void passkey.register(account.passkeys.store(), { name }, () => setName(''));
+        void ceremony.register(account.passkeys.store(), { name }, () => setName(''));
     }
 
     // The passkey leaves the list on success, and its dialog with it.
@@ -147,7 +147,7 @@ export default function AccountSecurity({ passkeys }: AccountSecurityProps) {
                         ))}
                     </ul>
                 )}
-                {passkey.isSupported && (
+                {ceremony.isSupported && (
                     <form onSubmit={addPasskey}>
                         <FieldGroup>
                             <InputField
@@ -165,15 +165,17 @@ export default function AccountSecurity({ passkeys }: AccountSecurityProps) {
                             <Field orientation="horizontal">
                                 <Button
                                     type="submit"
-                                    disabled={passkey.isProcessing}
+                                    disabled={ceremony.isProcessing}
                                     aria-describedby={
-                                        passkey.error === undefined ? undefined : 'credential-error'
+                                        ceremony.error === undefined
+                                            ? undefined
+                                            : 'credential-error'
                                     }
                                 >
                                     {translate('identity.security.passkeys.add')}
                                 </Button>
                             </Field>
-                            <FieldError id="credential-error">{passkey.error}</FieldError>
+                            <FieldError id="credential-error">{ceremony.error}</FieldError>
                         </FieldGroup>
                     </form>
                 )}
