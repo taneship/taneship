@@ -114,6 +114,20 @@ it('refuses an assertion made in a page framed by another site', function (): vo
     expect($passkey->refresh()->last_used_at)->toBeNull();
 });
 
+// A passkey sign-in skips the two-factor challenge on this ground: the authenticator verified its user.
+it('refuses an assertion made without verifying the user', function (bool $isConfirmation): void {
+    $authenticator = new SoftwareAuthenticator;
+    $user = User::factory()->create();
+    $passkey = registerPasskeyOn($authenticator, $user);
+    $options = app(CreatePasskeyAuthenticationOptions::class)->handle($isConfirmation ? $user : null);
+    $credential = publicKeyCredential($authenticator->authenticate($options, isUserVerified: false));
+
+    expect(fn (): Passkey => app(VerifyPasskey::class)->handle($credential, $options, $isConfirmation ? $user : null))
+        ->toThrow(InvalidPasskeyAssertionException::class, 'User authentication required.');
+
+    expect($passkey->refresh()->last_used_at)->toBeNull();
+})->with(['at sign-in' => false, 'at confirmation' => true]);
+
 it('refuses an assertion made for another challenge', function (): void {
     $authenticator = new SoftwareAuthenticator;
     registerPasskeyOn($authenticator, User::factory()->create());

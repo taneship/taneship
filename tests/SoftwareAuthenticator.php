@@ -41,7 +41,7 @@ final class SoftwareAuthenticator
     /**
      * @return array{id: string, rawId: string, type: string, response: array{clientDataJSON: string, attestationObject: string, transports: list<string>}, clientExtensionResults: array{}, authenticatorAttachment: string}
      */
-    public function register(PublicKeyCredentialCreationOptions $options, ?string $origin = null, string $type = 'webauthn.create', bool $isCrossOrigin = false): array
+    public function register(PublicKeyCredentialCreationOptions $options, ?string $origin = null, string $type = 'webauthn.create', bool $isCrossOrigin = false, bool $isUserVerified = true): array
     {
         $privateKey = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
 
@@ -61,7 +61,7 @@ final class SoftwareAuthenticator
             ->add(TextStringObject::create('fmt'), TextStringObject::create('none'))
             ->add(TextStringObject::create('attStmt'), MapObject::create())
             ->add(TextStringObject::create('authData'), ByteStringObject::create(
-                $this->authenticatorData((string) $options->rp->id, self::ATTESTED_CREDENTIAL_DATA).$attestedCredentialData,
+                $this->authenticatorData((string) $options->rp->id, $isUserVerified, self::ATTESTED_CREDENTIAL_DATA).$attestedCredentialData,
             ));
 
         return [
@@ -81,7 +81,7 @@ final class SoftwareAuthenticator
     /**
      * @return array{id: string, rawId: string, type: string, response: array{clientDataJSON: string, authenticatorData: string, signature: string, userHandle: string}, clientExtensionResults: array{}, authenticatorAttachment: string}
      */
-    public function authenticate(PublicKeyCredentialRequestOptions $options, ?string $origin = null, string $type = 'webauthn.get', bool $isCrossOrigin = false): array
+    public function authenticate(PublicKeyCredentialRequestOptions $options, ?string $origin = null, string $type = 'webauthn.get', bool $isCrossOrigin = false, bool $isUserVerified = true): array
     {
         if (! $this->privateKey instanceof OpenSSLAsymmetricKey) {
             throw new RuntimeException('The authenticator holds no credential: register one first.');
@@ -90,7 +90,7 @@ final class SoftwareAuthenticator
         // A security key counts its signatures; a synced passkey keeps 0.
         $this->counter++;
 
-        $authenticatorData = $this->authenticatorData((string) $options->rpId);
+        $authenticatorData = $this->authenticatorData((string) $options->rpId, $isUserVerified);
         $clientData = $this->clientData($type, $options->challenge, $origin, $isCrossOrigin);
 
         openssl_sign($authenticatorData.hash('sha256', $clientData, true), $signature, $this->privateKey, OPENSSL_ALGO_SHA256);
@@ -110,10 +110,11 @@ final class SoftwareAuthenticator
         ];
     }
 
-    private function authenticatorData(string $relyingPartyId, int $flags = 0): string
+    private function authenticatorData(string $relyingPartyId, bool $isUserVerified, int $flags = 0): string
     {
+        // Without a PIN, a fingerprint or a face, an authenticator only tells that someone is there.
         return hash('sha256', $relyingPartyId, true)
-            .chr(self::USER_PRESENT | self::USER_VERIFIED | $flags)
+            .chr(self::USER_PRESENT | ($isUserVerified ? self::USER_VERIFIED : 0) | $flags)
             .pack('N', $this->counter);
     }
 

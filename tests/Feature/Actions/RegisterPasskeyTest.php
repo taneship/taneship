@@ -82,6 +82,17 @@ it('refuses an attestation made in a page framed by another site', function (): 
     expect(Passkey::query()->exists())->toBeFalse();
 });
 
+it('refuses an attestation made without verifying the user', function (): void {
+    $user = User::factory()->create();
+    $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
+    $credential = publicKeyCredential(new SoftwareAuthenticator()->register($options, isUserVerified: false));
+
+    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), $options))
+        ->toThrow(InvalidPasskeyAttestationException::class, 'User authentication required.');
+
+    expect(Passkey::query()->exists())->toBeFalse();
+});
+
 it('refuses an assertion', function (): void {
     $user = User::factory()->create();
     $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
