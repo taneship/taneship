@@ -39,6 +39,27 @@ it('refuses a credential already registered', function (): void {
     expect($user->passkeys()->pluck('name')->all())->toBe(['MacBook Pro']);
 });
 
+it('stores a credential id as long as its column', function (): void {
+    $user = User::factory()->create();
+    $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
+    $credential = publicKeyCredential(new SoftwareAuthenticator(credentialIdLength: 191)->register($options));
+
+    $passkey = app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), $options);
+
+    expect(strlen($passkey->refresh()->credential_id))->toBe(255);
+});
+
+it('refuses a credential id longer than its column', function (): void {
+    $user = User::factory()->create();
+    $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
+    $credential = publicKeyCredential(new SoftwareAuthenticator(credentialIdLength: 192)->register($options));
+
+    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), $options))
+        ->toThrow(InvalidPasskeyAttestationException::class, 'the credential id exceeds 255 characters.');
+
+    expect(Passkey::query()->exists())->toBeFalse();
+});
+
 it('refuses an attestation made for another challenge', function (): void {
     $user = User::factory()->create();
     $credential = publicKeyCredential(new SoftwareAuthenticator()->register(app(CreatePasskeyRegistrationOptions::class)->handle($user)));

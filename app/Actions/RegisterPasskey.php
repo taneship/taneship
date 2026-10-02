@@ -44,6 +44,11 @@ final readonly class RegisterPasskey
         $passkey->name = $registration->name;
         $passkey->credential = $record;
 
+        // WebAuthn allows ids of 1023 bytes, which passkeys stay far from: the column holds 255 characters.
+        if (strlen($passkey->credential_id) > 255) {
+            throw InvalidPasskeyAttestationException::because('the credential id exceeds 255 characters.');
+        }
+
         if (Passkey::query()->where('credential_id', $passkey->credential_id)->exists()) {
             throw PasskeyAlreadyRegisteredException::for($passkey->credential_id);
         }

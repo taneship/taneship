@@ -36,7 +36,13 @@ final class SoftwareAuthenticator
 
     private int $counter = 0;
 
-    public function __construct(private readonly string $aaguid = '00000000-0000-0000-0000-000000000000') {}
+    /**
+     * @param  int<1, max>  $credentialIdLength
+     */
+    public function __construct(
+        private readonly string $aaguid = '00000000-0000-0000-0000-000000000000',
+        private readonly int $credentialIdLength = 32,
+    ) {}
 
     /**
      * @return array{id: string, rawId: string, type: string, response: array{clientDataJSON: string, attestationObject: string, transports: list<string>}, clientExtensionResults: array{}, authenticatorAttachment: string}
@@ -50,7 +56,7 @@ final class SoftwareAuthenticator
         }
 
         $this->privateKey = $privateKey;
-        $this->credentialId = random_bytes(32);
+        $this->credentialId = random_bytes($this->credentialIdLength);
         $this->userHandle = $options->user->id;
 
         $attestedCredentialData = Uuid::fromString($this->aaguid)->toBinary()
