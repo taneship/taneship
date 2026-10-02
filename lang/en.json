@@ -28,6 +28,8 @@
     "identity.login.forgot_password": "Forgot your password?",
     "identity.login.remember": "Remember me",
     "identity.login.submit": "Sign in",
+    "identity.login.or": "Or",
+    "identity.login.passkey": "Sign in with a passkey",
     "identity.login.no_account": "Don't have an account?",
     "identity.login.sign_up": "Sign up",
     "identity.register.title": "Sign up",
@@ -80,5 +82,6 @@
     "identity.user_menu.account_settings": "Account settings",
     "identity.user_menu.sign_out": "Sign out",
     "identity.use_passkey.already_registered": "This password manager or device already holds a passkey for your account.",
-    "identity.use_passkey.not_created": "Your browser could not create the passkey."
+    "identity.use_passkey.not_created": "Your browser could not create the passkey.",
+    "identity.use_passkey.not_used": "Your browser could not use a passkey."
 }

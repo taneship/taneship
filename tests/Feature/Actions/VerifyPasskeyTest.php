@@ -4,22 +4,13 @@ declare(strict_types=1);
 
 use App\Actions\CreatePasskeyAuthenticationOptions;
 use App\Actions\CreatePasskeyRegistrationOptions;
-use App\Actions\RegisterPasskey;
 use App\Actions\VerifyPasskey;
-use App\Data\PasskeyRegistrationData;
 use App\Exceptions\InvalidPasskeyAssertionException;
 use App\Exceptions\PasskeyOfAnotherUserException;
 use App\Exceptions\UnknownPasskeyException;
 use App\Models\Passkey;
 use App\Models\User;
 use Tests\SoftwareAuthenticator;
-
-function registerPasskeyOn(SoftwareAuthenticator $authenticator, User $user): Passkey
-{
-    $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
-
-    return app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', publicKeyCredential($authenticator->register($options))), $options);
-}
 
 it('finds the passkey of a valid assertion', function (): void {
     $authenticator = new SoftwareAuthenticator;

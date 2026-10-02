@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Passkey;
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,28 @@ it('renders the sign-in page for guests', function (): void {
             ->where('isSidebarOpen', true)
             ->where('user', null)
             ->where('errors', [])
-            ->where('translations', json_decode(File::get(lang_path('en.json')), true)));
+            ->where('translations', json_decode(File::get(lang_path('en.json')), true))
+            ->missing('passkeyOptions'));
+});
+
+it('keeps the authentication options in the session when the page asks for them', function (): void {
+    Passkey::factory()->create();
+
+    partialReload(route('login'), 'auth/login', 'passkeyOptions')
+        ->assertJsonPath('props.passkeyOptions', json_decode(session('passkeys.authentication_options'), true))
+        ->assertJsonPath('props.passkeyOptions.rpId', parse_url(config('app.url'), PHP_URL_HOST))
+        ->assertJsonPath('props.passkeyOptions.userVerification', 'required')
+        // Any passkey of this site: the browser offers the ones it holds.
+        ->assertJsonPath('props.passkeyOptions.allowCredentials', []);
+});
+
+it('renews the authentication options each time the page asks for them', function (): void {
+    $first = partialReload(route('login'), 'auth/login', 'passkeyOptions')->json('props.passkeyOptions.challenge');
+
+    $second = partialReload(route('login'), 'auth/login', 'passkeyOptions')->json('props.passkeyOptions.challenge');
+
+    expect($second)->not->toBe($first)
+        ->and(json_decode(session('passkeys.authentication_options'), true)['challenge'])->toBe($second);
 });
 
 it('sends signed-in users from the sign-in page to the dashboard', function (): void {

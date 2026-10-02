@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Tests\VirtualAuthenticator;
 
 it('renders the sign-in page in light mode', function (): void {
     visit(route('login'))
@@ -11,6 +12,8 @@ it('renders the sign-in page in light mode', function (): void {
         ->assertScript("document.documentElement.classList.contains('dark')", false)
         ->assertAttribute('meta[name="robots"]', 'content', 'noindex')
         ->assertSee(trans('identity.login.description'))
+        ->assertAttribute('#email', 'autocomplete', 'username webauthn')
+        ->assertSee(trans('identity.login.passkey'))
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
 });
@@ -22,6 +25,8 @@ it('renders the sign-in page in dark mode', function (): void {
         ->assertScript("document.documentElement.classList.contains('dark')", true)
         ->assertAttribute('meta[name="robots"]', 'content', 'noindex')
         ->assertSee(trans('identity.login.description'))
+        ->assertAttribute('#email', 'autocomplete', 'username webauthn')
+        ->assertSee(trans('identity.login.passkey'))
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
 });
@@ -55,6 +60,36 @@ it('signs in, remembering the user when asked', function (): void {
         ->assertNoSmoke();
 
     expect($user->refresh()->remember_token)->not->toBeNull();
+});
+
+it('shows why the browser could not use a passkey', function (string $mode): void {
+    // Browser tests are served on 127.0.0.1, an address WebAuthn refuses as relying party.
+    visit(route('login'))
+        ->{$mode}()
+        ->press(trans('identity.login.passkey'))
+        ->assertSee(trans('identity.use_passkey.not_used'))
+        ->assertAttribute('button[aria-describedby="credential-error"]', 'type', 'button')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
+
+it('ends the request of the suggestions quietly when leaving the page', function (): void {
+    VirtualAuthenticator::visit(route('login'))
+        // The page waits for a passkey from the suggestions once its options arrive.
+        ->assertScript('history.state.page.props.passkeyOptions !== undefined')
+        ->click(trans('identity.login.sign_up'))
+        ->assertPathIs('/register')
+        ->assertNoSmoke();
+});
+
+it('ends the request of the suggestions quietly when the button replaces it', function (): void {
+    // The authenticator holds no passkey: the dialog of the button ends as if the user closed it.
+    VirtualAuthenticator::visit(route('login'))
+        ->assertScript('history.state.page.props.passkeyOptions !== undefined')
+        ->press(trans('identity.login.passkey'))
+        ->assertButtonEnabled(trans('identity.login.passkey'))
+        ->assertMissing('#credential-error')
+        ->assertNoSmoke();
 });
 
 it('links to the forgot-password page', function (): void {

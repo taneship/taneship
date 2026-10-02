@@ -6,6 +6,7 @@ use App\Http\Controllers\Account\PasskeyController;
 use App\Http\Controllers\Account\SecurityController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\PasskeySessionController;
 use App\Http\Controllers\Auth\PasswordConfirmationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -20,6 +21,9 @@ Route::middleware('guest')->group(function (): void {
         ->name('register.store');
     Route::get('/login', [SessionController::class, 'create'])->name('login');
     Route::post('/login', [SessionController::class, 'store'])->name('login.store');
+    Route::post('/login/passkey', [PasskeySessionController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('login.passkey.store');
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
         ->middleware('throttle:6,1')

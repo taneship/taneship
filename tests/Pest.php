@@ -2,12 +2,18 @@
 
 declare(strict_types=1);
 
+use App\Actions\CreatePasskeyRegistrationOptions;
+use App\Actions\RegisterPasskey;
+use App\Data\PasskeyRegistrationData;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\Passkey;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Inertia\Support\Header;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
+use Tests\SoftwareAuthenticator;
 use Tests\TestCase;
 use Webauthn\PublicKeyCredential;
 
@@ -46,6 +52,13 @@ pest()->extend(TestCase::class)
 function publicKeyCredential(array $credential): PublicKeyCredential
 {
     return app(SerializerInterface::class)->deserialize(json_encode($credential, JSON_THROW_ON_ERROR), PublicKeyCredential::class, 'json');
+}
+
+function registerPasskeyOn(SoftwareAuthenticator $authenticator, User $user): Passkey
+{
+    $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
+
+    return app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', publicKeyCredential($authenticator->register($options))), $options);
 }
 
 /**

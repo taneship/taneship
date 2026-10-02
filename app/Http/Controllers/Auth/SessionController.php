@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\CreatePasskeyAuthenticationOptions;
 use App\Http\Requests\Auth\SignInRequest;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Http\RedirectResponse;
@@ -15,12 +16,27 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 final class SessionController
 {
-    public function create(): Response
-    {
-        return Inertia::render('auth/login');
+    public function create(
+        Request $request,
+        CreatePasskeyAuthenticationOptions $createPasskeyAuthenticationOptions,
+        SerializerInterface $serializer,
+    ): Response {
+        return Inertia::render('auth/login', [
+            // Asked for when a ceremony starts. The session keeps them, challenge included, for the credential.
+            'passkeyOptions' => Inertia::optional(function () use ($request, $createPasskeyAuthenticationOptions, $serializer): mixed {
+                // Without null values: the browser refuses a null where WebAuthn expects a value.
+                $options = $serializer->serialize($createPasskeyAuthenticationOptions->handle(), 'json', [AbstractObjectNormalizer::SKIP_NULL_VALUES => true]);
+
+                $request->session()->put('passkeys.authentication_options', $options);
+
+                return json_decode($options, flags: JSON_THROW_ON_ERROR);
+            }),
+        ]);
     }
 
     public function store(SignInRequest $request): RedirectResponse

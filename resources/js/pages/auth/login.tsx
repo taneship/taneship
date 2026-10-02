@@ -1,9 +1,12 @@
 import { Form, Head, Link } from '@inertiajs/react';
+import { KeyRoundIcon } from 'lucide-react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 
 import { InputField } from '@/components/input-field';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSeparator } from '@/components/ui/field';
+import { usePasskey } from '@/hooks/use-passkey';
 import { useTranslation } from '@/hooks/use-translation';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { register } from '@/routes';
@@ -12,6 +15,17 @@ import password from '@/routes/password';
 
 export default function AuthLogin() {
     const { translate } = useTranslation();
+    const passkey = usePasskey();
+    // Read when a passkey arrives, long after the page started waiting for one from the suggestions.
+    const remember = useRef(false);
+
+    const signInData = () => ({ remember: remember.current });
+
+    const offerPasskeys = useEffectEvent(() => {
+        void passkey.authenticateFromSuggestions(login.passkey.store(), signInData);
+    });
+
+    useEffect(() => offerPasskeys(), []);
 
     return (
         <>
@@ -30,7 +44,8 @@ export default function AuthLogin() {
                             label={translate('identity.login.email')}
                             error={errors.email}
                             type="email"
-                            autoComplete="username"
+                            // Saved passkeys join the suggestions of this field.
+                            autoComplete="username webauthn"
                             required
                         />
                         <InputField
@@ -50,7 +65,13 @@ export default function AuthLogin() {
                             required
                         />
                         <Field orientation="horizontal">
-                            <Checkbox id="remember" name="remember" />
+                            <Checkbox
+                                id="remember"
+                                name="remember"
+                                onCheckedChange={(checked) => {
+                                    remember.current = checked;
+                                }}
+                            />
                             <FieldLabel htmlFor="remember">
                                 {translate('identity.login.remember')}
                             </FieldLabel>
@@ -60,6 +81,34 @@ export default function AuthLogin() {
                                 {translate('identity.login.submit')}
                             </Button>
                         </Field>
+                        {passkey.isSupported && (
+                            <>
+                                <FieldSeparator>{translate('identity.login.or')}</FieldSeparator>
+                                <Field>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="lg"
+                                        disabled={passkey.isProcessing}
+                                        aria-describedby={
+                                            passkey.error === undefined
+                                                ? undefined
+                                                : 'credential-error'
+                                        }
+                                        onClick={() =>
+                                            void passkey.authenticate(
+                                                login.passkey.store(),
+                                                signInData,
+                                            )
+                                        }
+                                    >
+                                        <KeyRoundIcon />
+                                        {translate('identity.login.passkey')}
+                                    </Button>
+                                    <FieldError id="credential-error">{passkey.error}</FieldError>
+                                </Field>
+                            </>
+                        )}
                     </FieldGroup>
                 )}
             </Form>

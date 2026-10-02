@@ -17,8 +17,10 @@ use Webauthn\CredentialRecord;
 
 /**
  * Eloquent sets created_at on insert, although timestamps() leaves the column nullable.
+ * A passkey always has an owner: its user_id is required, and deleted with the user.
  *
  * @property-read CarbonImmutable $created_at
+ * @property-read User $user
  */
 #[Hidden(['credential'])]
 final class Passkey extends Model
