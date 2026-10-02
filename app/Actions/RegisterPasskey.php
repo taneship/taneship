@@ -9,6 +9,7 @@ use App\Exceptions\InvalidPasskeyAttestationException;
 use App\Exceptions\PasskeyAlreadyRegisteredException;
 use App\Models\Passkey;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Throwable;
 use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
@@ -53,7 +54,12 @@ final readonly class RegisterPasskey
             throw PasskeyAlreadyRegisteredException::for($passkey->credential_id);
         }
 
-        $passkey->save();
+        try {
+            $passkey->save();
+        } catch (UniqueConstraintViolationException) {
+            // Another request stored the credential since the check above: the unique index decides.
+            throw PasskeyAlreadyRegisteredException::for($passkey->credential_id);
+        }
 
         return $passkey;
     }

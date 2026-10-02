@@ -39,6 +39,21 @@ it('refuses a credential already registered', function (): void {
     expect($user->passkeys()->pluck('name')->all())->toBe(['MacBook Pro']);
 });
 
+it('refuses a credential that another request registers first', function (): void {
+    $user = User::factory()->create();
+    $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
+    $credential = publicKeyCredential(new SoftwareAuthenticator()->register($options));
+
+    // The other request stores the credential between the check and the insert of this one.
+    Passkey::creating(function (Passkey $passkey): void {
+        Passkey::withoutEvents(fn () => $passkey->replicate()->save());
+    });
+
+    // No query follows: PostgreSQL ends the transaction of the test at the refused insert.
+    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), $options))
+        ->toThrow(PasskeyAlreadyRegisteredException::class);
+});
+
 it('stores a credential id as long as its column', function (): void {
     $user = User::factory()->create();
     $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
