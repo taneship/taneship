@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Account\PasskeyController;
 use App\Http\Controllers\Account\SecurityController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -46,4 +47,5 @@ Route::middleware('auth')->group(function (): void {
 
 Route::middleware(['auth', 'verified', 'password.confirm'])->group(function (): void {
     Route::get('/account/security', [SecurityController::class, 'edit'])->name('account.security.edit');
+    Route::post('/account/passkeys', [PasskeyController::class, 'store'])->name('account.passkeys.store');
 });

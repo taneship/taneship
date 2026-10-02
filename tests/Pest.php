@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
+use Inertia\Support\Header;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
 use Tests\TestCase;
 use Webauthn\PublicKeyCredential;
@@ -42,4 +46,20 @@ pest()->extend(TestCase::class)
 function publicKeyCredential(array $credential): PublicKeyCredential
 {
     return app(SerializerInterface::class)->deserialize(json_encode($credential, JSON_THROW_ON_ERROR), PublicKeyCredential::class, 'json');
+}
+
+/**
+ * Asks a page for some of its props, as router.reload({ only }) does. Inertia's own reloadOnly()
+ * leaves out the X-Inertia header, so the root view renders with partial props, and fails.
+ *
+ * @return TestResponse<Response>
+ */
+function partialReload(string $url, string $component, string ...$props): TestResponse
+{
+    return test()->get($url, [
+        Header::INERTIA => 'true',
+        Header::VERSION => (string) app(HandleInertiaRequests::class)->version(request()),
+        Header::PARTIAL_COMPONENT => $component,
+        Header::PARTIAL_ONLY => implode(',', $props),
+    ]);
 }

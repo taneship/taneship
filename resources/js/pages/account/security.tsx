@@ -1,9 +1,16 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { KeyRoundIcon } from 'lucide-react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 
+import { InputField } from '@/components/input-field';
+import { Button } from '@/components/ui/button';
+import { Field, FieldError, FieldGroup } from '@/components/ui/field';
+import { usePasskey } from '@/hooks/use-passkey';
 import { useTranslation } from '@/hooks/use-translation';
 import { AccountLayout } from '@/layouts/account-layout';
 import { AppLayout } from '@/layouts/app-layout';
+import account from '@/routes/account';
 import type { Passkey } from '@/types/passkey';
 
 type AccountSecurityProps = {
@@ -12,6 +19,14 @@ type AccountSecurityProps = {
 
 export default function AccountSecurity({ passkeys }: AccountSecurityProps) {
     const { translate } = useTranslation();
+    const { errors } = usePage().props;
+    const passkey = usePasskey();
+    const [name, setName] = useState('');
+
+    function addPasskey(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        void passkey.register(account.passkeys.store(), { name }, () => setName(''));
+    }
 
     return (
         <>
@@ -67,6 +82,34 @@ export default function AccountSecurity({ passkeys }: AccountSecurityProps) {
                             </li>
                         ))}
                     </ul>
+                )}
+                {passkey.isSupported && (
+                    <form onSubmit={addPasskey}>
+                        <FieldGroup>
+                            <InputField
+                                name="name"
+                                label={translate('identity.security.passkeys.name')}
+                                error={errors.name}
+                                value={name}
+                                onChange={(event) => setName(event.target.value)}
+                                autoComplete="off"
+                                maxLength={255}
+                                required
+                            />
+                            <Field orientation="horizontal">
+                                <Button
+                                    type="submit"
+                                    disabled={passkey.isProcessing}
+                                    aria-describedby={
+                                        passkey.error === undefined ? undefined : 'credential-error'
+                                    }
+                                >
+                                    {translate('identity.security.passkeys.add')}
+                                </Button>
+                            </Field>
+                            <FieldError id="credential-error">{passkey.error}</FieldError>
+                        </FieldGroup>
+                    </form>
                 )}
             </section>
         </>

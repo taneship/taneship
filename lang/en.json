@@ -69,7 +69,11 @@
     "identity.security.passkeys.added": "Added :time",
     "identity.security.passkeys.last_used": "Last used :time",
     "identity.security.passkeys.never_used": "Never used",
+    "identity.security.passkeys.name": "Passkey name",
+    "identity.security.passkeys.add": "Add passkey",
     "identity.user_menu.label": "User menu",
     "identity.user_menu.account_settings": "Account settings",
-    "identity.user_menu.sign_out": "Sign out"
+    "identity.user_menu.sign_out": "Sign out",
+    "identity.use_passkey.already_registered": "This password manager or device already holds a passkey for your account.",
+    "identity.use_passkey.not_created": "Your browser could not create the passkey."
 }

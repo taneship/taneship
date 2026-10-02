@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\CreatePasskeyAuthenticationOptions;
 use App\Actions\CreatePasskeyRegistrationOptions;
 use App\Actions\RegisterPasskey;
+use App\Data\PasskeyRegistrationData;
 use App\Exceptions\InvalidPasskeyAttestationException;
 use App\Exceptions\PasskeyAlreadyRegisteredException;
 use App\Models\Passkey;
@@ -16,7 +17,7 @@ it('stores the passkey of the user under its name', function (): void {
     $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
     $credential = new SoftwareAuthenticator('fbfc3007-154e-4ecc-8c0b-6e020557d7bd')->register($options);
 
-    $passkey = app(RegisterPasskey::class)->handle($user, 'MacBook Pro', publicKeyCredential($credential), $options)->refresh();
+    $passkey = app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', publicKeyCredential($credential)), $options)->refresh();
 
     expect($passkey->user()->is($user))->toBeTrue()
         ->and($passkey->name)->toBe('MacBook Pro')
@@ -30,9 +31,9 @@ it('refuses a credential already registered', function (): void {
     $user = User::factory()->create();
     $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
     $credential = publicKeyCredential(new SoftwareAuthenticator()->register($options));
-    app(RegisterPasskey::class)->handle($user, 'MacBook Pro', $credential, $options);
+    app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), $options);
 
-    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, 'Work laptop', $credential, $options))
+    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('Work laptop', $credential), $options))
         ->toThrow(PasskeyAlreadyRegisteredException::class);
 
     expect($user->passkeys()->pluck('name')->all())->toBe(['MacBook Pro']);
@@ -42,7 +43,7 @@ it('refuses an attestation made for another challenge', function (): void {
     $user = User::factory()->create();
     $credential = publicKeyCredential(new SoftwareAuthenticator()->register(app(CreatePasskeyRegistrationOptions::class)->handle($user)));
 
-    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, 'MacBook Pro', $credential, app(CreatePasskeyRegistrationOptions::class)->handle($user)))
+    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), app(CreatePasskeyRegistrationOptions::class)->handle($user)))
         ->toThrow(InvalidPasskeyAttestationException::class, 'Invalid challenge.');
 
     expect(Passkey::query()->exists())->toBeFalse();
@@ -53,7 +54,7 @@ it('refuses an attestation made on another origin', function (): void {
     $options = app(CreatePasskeyRegistrationOptions::class)->handle($user);
     $credential = publicKeyCredential(new SoftwareAuthenticator()->register($options, 'https://evil.example'));
 
-    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, 'MacBook Pro', $credential, $options))
+    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), $options))
         ->toThrow(InvalidPasskeyAttestationException::class, 'Invalid origin.');
 
     expect(Passkey::query()->exists())->toBeFalse();
@@ -66,7 +67,7 @@ it('refuses an assertion', function (): void {
     $authenticator->register($options);
     $credential = publicKeyCredential($authenticator->authenticate(app(CreatePasskeyAuthenticationOptions::class)->handle()));
 
-    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, 'MacBook Pro', $credential, $options))
+    expect(fn (): Passkey => app(RegisterPasskey::class)->handle($user, new PasskeyRegistrationData('MacBook Pro', $credential), $options))
         ->toThrow(InvalidPasskeyAttestationException::class);
 
     expect(Passkey::query()->exists())->toBeFalse();

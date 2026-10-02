@@ -55,9 +55,23 @@ it('renders the security page without passkeys', function (string $mode, bool $i
         ->assertAttribute('#app', 'data-server-rendered', 'true')
         ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
         ->assertSee(trans('identity.security.passkeys.empty'))
+        ->assertVisible('#name')
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('shows why the browser could not create the passkey', function (string $mode): void {
+    $this->actingAs(User::factory()->create());
+
+    // Browser tests are served on 127.0.0.1, an address WebAuthn refuses as relying party.
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->type('name', 'MacBook Pro')
+        ->press(trans('identity.security.passkeys.add'))
+        ->assertSee(trans('identity.use_passkey.not_created'))
+        ->assertValue('#name', 'MacBook Pro')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
 
 it('renders the security page on mobile', function (): void {
     $user = User::factory()->create();

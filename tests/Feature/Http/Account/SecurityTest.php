@@ -22,7 +22,8 @@ it('renders the security page for a user who confirmed their password', function
             ->where('user', ['name' => $user->name, 'email' => $user->email])
             ->where('errors', [])
             ->where('translations', json_decode(File::get(lang_path('en.json')), true))
-            ->where('passkeys', []));
+            ->where('passkeys', [])
+            ->missing('passkeyOptions'));
 });
 
 it('lists the passkeys of the user, newest first', function (): void {
@@ -50,6 +51,19 @@ it('lists the passkeys of the user, newest first', function (): void {
         ]));
 });
 
+it('writes just now for a passkey added or used a moment ago', function (): void {
+    $this->freezeTime();
+    $user = User::factory()->create();
+    Passkey::factory()->for($user)->create(['created_at' => now(), 'last_used_at' => now()]);
+
+    $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->get(route('account.security.edit'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('passkeys.0.added', 'just now')
+            ->where('passkeys.0.lastUsed', 'just now'));
+});
+
 it('names holders from the configuration, so a newer list renames existing passkeys', function (): void {
     $user = User::factory()->create();
     Passkey::factory()->for($user)->withAaguid('fbfc3007-154e-4ecc-8c0b-6e020557d7bd')->create();
@@ -60,6 +74,30 @@ it('names holders from the configuration, so a newer list renames existing passk
         ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('account.security.edit'))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page->where('passkeys.0.holder', 'iCloud Keychain'));
+});
+
+it('keeps the registration options in the session when the page asks for them', function (): void {
+    $user = User::factory()->create();
+    $passkey = Passkey::factory()->for($user)->create();
+
+    $this->actingAs($user)->withSession(['auth.password_confirmed_at' => time()]);
+
+    partialReload(route('account.security.edit'), 'account/security', 'passkeyOptions')
+        ->assertJsonMissingPath('props.passkeys')
+        ->assertJsonPath('props.passkeyOptions', json_decode(session('passkeys.registration_options'), true))
+        ->assertJsonPath('props.passkeyOptions.excludeCredentials.0.id', $passkey->credential_id)
+        // The browser refuses a null where WebAuthn expects a value.
+        ->assertJsonMissingPath('props.passkeyOptions.authenticatorSelection.authenticatorAttachment');
+});
+
+it('renews the registration options each time the page asks for them', function (): void {
+    $this->actingAs(User::factory()->create())->withSession(['auth.password_confirmed_at' => time()]);
+    $first = partialReload(route('account.security.edit'), 'account/security', 'passkeyOptions')->json('props.passkeyOptions.challenge');
+
+    $second = partialReload(route('account.security.edit'), 'account/security', 'passkeyOptions')->json('props.passkeyOptions.challenge');
+
+    expect($second)->not->toBe($first)
+        ->and(json_decode(session('passkeys.registration_options'), true)['challenge'])->toBe($second);
 });
 
 it('asks for the password first', function (): void {

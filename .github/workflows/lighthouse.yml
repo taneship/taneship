@@ -47,7 +47,8 @@ jobs:
       - name: Start the application
         run: |
           php artisan inertia:start-ssr > "$RUNNER_TEMP/ssr.log" 2>&1 &
-          php artisan serve --port=8000 > "$RUNNER_TEMP/serve.log" 2>&1 &
+          # .env.example serves localhost, which may resolve to ::1: the proxy below expects 127.0.0.1.
+          php artisan serve --host=127.0.0.1 --port=8000 > "$RUNNER_TEMP/serve.log" 2>&1 &
 
           # php artisan serve compresses nothing, where every production server does: Caddy compresses
           # its responses, as one would.

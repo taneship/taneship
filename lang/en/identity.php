@@ -25,4 +25,8 @@ return [
         'sent' => 'If an account uses this address, it will receive a link to reset its password.',
         'reset' => 'Your password is reset. Sign in with the new one.',
     ],
+    'passkeys' => [
+        'added' => 'Your passkey is added.',
+        'invalid' => 'Your passkey could not be verified. Try again.',
+    ],
 ];
