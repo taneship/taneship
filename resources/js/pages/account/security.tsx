@@ -181,8 +181,12 @@ export default function AccountSecurity({
                         <Form
                             action={account.twoFactorAuthentication.update()}
                             onError={() => setCode('')}
-                            // Recovery codes are shown once the setup is confirmed, and only then asked for.
-                            onSuccess={() => router.reload({ only: ['recoveryCodes'] })}
+                            onSuccess={() => {
+                                // The page outlives the form: left as it is, the code would fill the field of the next setup.
+                                setCode('');
+                                // Recovery codes are shown once the setup is confirmed, and only then asked for.
+                                router.reload({ only: ['recoveryCodes'] });
+                            }}
                         >
                             {({ processing }) => (
                                 <FieldGroup>

@@ -133,6 +133,27 @@ it('enables two-factor authentication with a first code, then shows the recovery
     expect($user->refresh()->hasEnabledTwoFactorAuthentication())->toBeTrue();
 })->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
 
+it('offers an empty code field to the setup that follows a confirmed one', function (): void {
+    $this->freezeTime();
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    $page = confirmPassword(visit(route('account.security.edit')))
+        ->press(trans('identity.security.two_factor_authentication.enable'))
+        ->assertVisible('#code');
+
+    $page->type('code', twoFactorCode($user->refresh()))
+        ->press(trans('identity.security.two_factor_authentication.confirm'))
+        ->assertSee(trans('identity.two_factor_authentication.enabled'))
+        ->press(trans('identity.security.two_factor_authentication.disable'))
+        ->assertSee(trans('identity.two_factor_authentication.disabled'))
+        ->press(trans('identity.security.two_factor_authentication.enable'))
+        ->assertVisible('#code')
+        ->assertValue('#code', '')
+        ->assertNoSmoke();
+});
+
 it('cancels a pending setup', function (): void {
     $user = pendingTwoFactorUser();
 
