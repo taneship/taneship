@@ -129,7 +129,11 @@ it('enables two-factor authentication with a first code, then shows the recovery
         $page->assertSeeIn('[aria-labelledby="two-factor-authentication"] ul', (string) $recoveryCode);
     }
 
-    $page->assertNoSmoke()->assertNoAccessibilityIssues(level: 3);
+    // The toast fades in: axe would skip it, still transparent, or measure its contrast halfway.
+    $page
+        ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
 
     expect($user->refresh()->hasEnabledTwoFactorAuthentication())->toBeTrue();
 })->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
@@ -334,6 +338,8 @@ it('asks before removing a passkey', function (string $mode, bool $isDark): void
         ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
         ->assertSeeIn('[role="alertdialog"]', 'Remove iPhone?')
         ->assertSeeIn('[role="alertdialog"]', trans('identity.security.passkeys.removal.description'))
+        // The dialog fades in: axe would skip it, still transparent, or measure its contrast halfway.
+        ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
