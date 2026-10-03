@@ -1,6 +1,5 @@
 import { cn } from 'cn';
 import { OTPInput, OTPInputContext } from 'input-otp';
-import { MinusIcon } from 'lucide-react';
 import * as React from 'react';
 
 function InputOTP({
@@ -67,18 +66,4 @@ function InputOTPSlot({
     );
 }
 
-// A dash between groups of digits, which the input already reads out whole.
-function InputOTPSeparator({ ...props }: React.ComponentProps<'div'>) {
-    return (
-        <div
-            data-slot="input-otp-separator"
-            className="flex items-center [&_svg:not([class*='size-'])]:size-4"
-            aria-hidden="true"
-            {...props}
-        >
-            <MinusIcon />
-        </div>
-    );
-}
-
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator };
+export { InputOTP, InputOTPGroup, InputOTPSlot };
