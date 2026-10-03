@@ -27,6 +27,13 @@ import account from '@/routes/account';
 import type { Passkey } from '@/types/passkey';
 import type { TwoFactorSetup } from '@/types/two-factor-setup';
 
+// Asked for together: a page left open in another tab then shows the state two-factor authentication is in now.
+const twoFactorAuthenticationProps = [
+    'recoveryCodes',
+    'hasEnabledTwoFactorAuthentication',
+    'twoFactorSetup',
+];
+
 type AccountSecurityProps = {
     hasEnabledTwoFactorAuthentication: boolean;
     twoFactorSetup: TwoFactorSetup | null;
@@ -105,7 +112,9 @@ export default function AccountSecurity({
                                 <Button
                                     variant="outline"
                                     className="self-start"
-                                    onClick={() => router.reload({ only: ['recoveryCodes'] })}
+                                    onClick={() =>
+                                        router.reload({ only: twoFactorAuthenticationProps })
+                                    }
                                 >
                                     {translate(
                                         'identity.security.two_factor_authentication.recovery_codes.show',
@@ -118,10 +127,10 @@ export default function AccountSecurity({
                                             <li key={recoveryCode}>{recoveryCode}</li>
                                         ))}
                                     </ul>
-                                    {/* Asked for alone, the new codes replace the old ones in place: a full visit would leave them out. */}
+                                    {/* Asked for by name, the new codes replace the old ones in place: a full visit would leave them out. */}
                                     <Form
                                         action={account.twoFactorAuthentication.recoveryCodes.store()}
-                                        options={{ only: ['recoveryCodes'] }}
+                                        options={{ only: twoFactorAuthenticationProps }}
                                     >
                                         {({ processing }) => (
                                             <Button

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\DisableTwoFactorAuthentication;
 use App\Models\Passkey;
 use App\Models\User;
 use Pest\Browser\Api\AwaitableWebpage;
@@ -205,6 +206,42 @@ it('regenerates the recovery codes in place', function (): void {
     }
 
     $page->assertDontSee($previousRecoveryCode)->assertNoSmoke();
+});
+
+it('shows two-factor authentication off when a page left open asks for the recovery codes', function (): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+
+    $this->actingAs($user);
+
+    $page = confirmPassword(visit(route('account.security.edit')))
+        ->assertSee(trans('identity.security.two_factor_authentication.recovery_codes.show'));
+
+    // Another tab turns it off.
+    app(DisableTwoFactorAuthentication::class)->handle($user);
+
+    $page->press(trans('identity.security.two_factor_authentication.recovery_codes.show'))
+        ->assertSee(trans('identity.security.two_factor_authentication.enable'))
+        ->assertDontSee(trans('identity.security.two_factor_authentication.recovery_codes.title'))
+        ->assertNoSmoke();
+});
+
+it('shows two-factor authentication off when a page left open regenerates the recovery codes', function (): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+
+    $this->actingAs($user);
+
+    $page = confirmPassword(visit(route('account.security.edit')))
+        ->press(trans('identity.security.two_factor_authentication.recovery_codes.show'))
+        ->assertSee(trans('identity.security.two_factor_authentication.recovery_codes.regenerate'));
+
+    // Another tab turns it off.
+    app(DisableTwoFactorAuthentication::class)->handle($user);
+
+    $page->press(trans('identity.security.two_factor_authentication.recovery_codes.regenerate'))
+        ->assertSee(trans('identity.two_factor_authentication.not_enabled'))
+        ->assertSee(trans('identity.security.two_factor_authentication.enable'))
+        ->assertDontSee(trans('identity.security.two_factor_authentication.recovery_codes.title'))
+        ->assertNoSmoke();
 });
 
 it('no longer shows the recovery codes from the browser history after sign-out', function (): void {
