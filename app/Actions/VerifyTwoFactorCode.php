@@ -33,10 +33,11 @@ final readonly class VerifyTwoFactorCode
         $step = intdiv(now()->getTimestamp(), $this->google2fa->getKeyRegeneration());
 
         // Given no last step, google2fa answers true instead of the step it matched: a step before the window stands in.
+        // A Redis cache gives the last step back as a string.
         $acceptedStep = $this->google2fa->verifyKeyNewer(
             $user->two_factor_secret,
             $code,
-            is_int($lastStep) ? $lastStep : $step - self::WINDOW - 1,
+            is_numeric($lastStep) ? (int) $lastStep : $step - self::WINDOW - 1,
             self::WINDOW,
             $step,
         );

@@ -6,6 +6,7 @@ use App\Actions\VerifyTwoFactorCode;
 use App\Exceptions\InvalidTwoFactorCodeException;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 
 beforeEach(function (): void {
     // Ten seconds into a step, far from the real clock: an action reading google2fa's own clock fails.
@@ -66,6 +67,19 @@ it('remembers an accepted step as long as the window covers it', function (): vo
 
     // The last second of the step after the code's, where the window still covers the code.
     $this->travelTo(CarbonImmutable::parse('2026-10-02 09:31:29'));
+
+    expect(fn () => app(VerifyTwoFactorCode::class)->handle($user, $code))
+        ->toThrow(InvalidTwoFactorCodeException::class);
+});
+
+it('refuses a code already accepted when the cache gives the step back as a string', function (): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+    $code = twoFactorCode($user);
+    app(VerifyTwoFactorCode::class)->handle($user, $code);
+
+    // Redis keeps an integer as it is, and gives it back as a string.
+    $key = VerifyTwoFactorCode::LAST_STEP_KEY_PREFIX.$user->id;
+    Cache::put($key, (string) Cache::get($key));
 
     expect(fn () => app(VerifyTwoFactorCode::class)->handle($user, $code))
         ->toThrow(InvalidTwoFactorCodeException::class);
