@@ -42,7 +42,7 @@ it('sends the link again', function (string $mode): void {
         ->{$mode}()
         ->press(trans('identity.verify_email.resend'))
         ->assertSee(trans('identity.verification.sent'))
-        // The toast and the button fade in: axe would measure their contrast halfway.
+        // The toast fades in: axe would measure its contrast halfway.
         ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);

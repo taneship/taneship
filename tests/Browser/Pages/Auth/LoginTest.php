@@ -40,7 +40,7 @@ it('shows the error of a wrong pair', function (string $mode): void {
         ->type('password', 'wrong-password')
         ->press('[type="submit"]')
         ->assertSee(trans('auth.failed'))
-        // The button fades back in when the request ends: axe would measure its contrast halfway.
+        // The text of an invalid field fades to red: axe would measure the color it starts from.
         ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
         ->assertAttribute('#email', 'aria-invalid', 'true')
         ->assertValue('password', '')

@@ -52,8 +52,6 @@ it('shows why a code is refused, and clears it', function (string $mode): void {
         ->type('code', twoFactorCode($user, 2))
         ->press(trans('identity.two_factor_challenge.submit'))
         ->assertSee(trans('identity.two_factor_authentication.invalid_code'))
-        // The button fades back in when the request ends: axe would measure its contrast halfway.
-        ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
         ->assertAttribute('#code', 'aria-invalid', 'true')
         ->assertValue('#code', '')
         ->assertNoSmoke()
@@ -66,6 +64,7 @@ it('shows why a recovery code is refused, and keeps it to fix a typo', function 
         ->type('recovery_code', 'abcdefghij-klmnopqrst')
         ->press(trans('identity.two_factor_challenge.submit'))
         ->assertSee(trans('identity.two_factor_authentication.recovery_codes.invalid'))
+        // The text of an invalid field fades to red: axe would measure the color it starts from.
         ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
         ->assertAttribute('#recovery_code', 'aria-invalid', 'true')
         ->assertValue('#recovery_code', 'abcdefghij-klmnopqrst')

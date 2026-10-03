@@ -35,7 +35,7 @@ it('shows the error of an address the server refuses', function (string $mode): 
         ->type('email', 'jane..doe@example.com')
         ->press('[type="submit"]')
         ->assertSee(trans('validation.email', ['attribute' => 'email']))
-        // The button fades back in when the request ends: axe would measure its contrast halfway.
+        // The text of an invalid field fades to red: axe would measure the color it starts from.
         ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
         ->assertAttribute('#email', 'aria-invalid', 'true')
         ->assertNoSmoke()
