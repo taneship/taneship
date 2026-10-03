@@ -180,6 +180,15 @@ it('validates the form', function (array $input, array $errors): void {
     'not digits' => [['code' => 'abcdef'], ['code']],
 ]);
 
+it('refuses a recovery code beyond 255 characters', function (): void {
+    enterPassword(User::factory()->withTwoFactorAuthentication()->create());
+
+    $this->post(route('two-factor-challenge.store'), ['recovery_code' => str_repeat('a', 256)])
+        ->assertSessionHasErrors(['recovery_code' => trans('validation.max.string', ['attribute' => 'recovery code', 'max' => 255])]);
+
+    $this->assertGuest();
+});
+
 it('refuses a sixth attempt within a minute on the field in use, and fires lockout', function (string $field, Closure $answer): void {
     Event::fake([Lockout::class]);
     $this->freezeTime();

@@ -15,7 +15,7 @@ final class PassTwoFactorChallengeRequest extends FormRequest
     {
         return [
             'code' => ['nullable', 'required_without:recovery_code', 'string', 'digits:6'],
-            'recovery_code' => ['nullable', 'required_without:code', 'string'],
+            'recovery_code' => ['nullable', 'required_without:code', 'string', 'max:255'],
         ];
     }
 
