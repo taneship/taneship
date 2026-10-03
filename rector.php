@@ -19,6 +19,9 @@ return RectorConfig::configure()
     ->withSkip([
         __DIR__.'/bootstrap/cache',
     ])
+    // Rector's default cache directory is shared by every project of the machine: --clear-cache,
+    // which the gates pass, would empty it under the run of another checkout.
+    ->withCache(cacheDirectory: __DIR__.'/storage/framework/cache/rector')
     ->withPhpSets(php85: true)
     ->withPreparedSets(
         deadCode: true,

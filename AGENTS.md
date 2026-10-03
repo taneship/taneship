@@ -49,7 +49,7 @@ Tools enforce quality; review does not replace them. No gate ever gets a baselin
 ```bash
 php artisan config:clear
 vendor/bin/pint --test                                                  # PHP style, Laravel preset
-vendor/bin/rector process --dry-run                                     # PHP 8.5 and Laravel 13 idioms, dead code, missing types
+vendor/bin/rector process --dry-run --clear-cache                       # PHP 8.5 and Laravel 13 idioms, dead code, missing types
 vendor/bin/phpstan analyse                                              # Larastan, level 10
 vendor/bin/pest --parallel --exclude-testsuite=Browser --coverage --min=90
 vendor/bin/pest --type-coverage --min=100
@@ -64,6 +64,8 @@ npx vp test                                                             # Vitest
 | `composer test:browser` | The browser tests: every page and the critical journeys, rendered on the server. They run locally, not in CI                                                                                           |
 | Git hooks               | Before a commit, Rector and Pint on staged PHP files and `vp check --fix` on staged TypeScript and CSS. On a commit, the commit message check                                                          |
 | CI                      | `composer check` against SQLite, PostgreSQL and MySQL, Lighthouse on the public pages (at least 0.95 on mobile in every category audited), the commit messages, and the dependency audits, also weekly |
+
+`composer check` and `composer fix` clear Rector's cache first. The cache holds one verdict per file, so it still calls a file clean when a change in another file, such as a helper added to `tests/Pest.php`, makes Rector want to rewrite it. The pre-commit hook gives Rector the staged files alone and can miss such a rewrite: `composer check` decides.
 
 The architecture tests in `tests/Unit/Arch/` check the layering rule, the naming rules, `strict_types`, final classes, the absence of ignore and disable comments, the translation keys, that every component and hook is imported somewhere, and that every type of `resources/js/types/` matches its PHP class.
 
