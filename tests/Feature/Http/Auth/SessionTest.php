@@ -218,6 +218,15 @@ it('signs out and leads to the welcome page', function (): void {
         ->and(session()->token())->not->toBe($token);
 });
 
+it('has the browser clear its history keys on the page that follows sign-out, and only there', function (): void {
+    $this->actingAs(User::factory()->create());
+
+    $this->post(route('logout'));
+
+    expect($this->get(route('home'))->inertiaPage())->toHaveKey('clearHistory', true)
+        ->and($this->get(route('home'))->inertiaPage())->not->toHaveKey('clearHistory');
+});
+
 it('signs out signed-in users only', function (): void {
     $this->post(route('logout'))->assertRedirect(route('login'));
 });

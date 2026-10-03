@@ -87,6 +87,9 @@ final class SessionController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        // Asked through the new session, for the next page: the entries the Security page encrypted lose their key.
+        Inertia::clearHistory();
+
         return to_route('home');
     }
 }

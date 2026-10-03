@@ -28,6 +28,10 @@ final class SecurityController
         CreatePasskeyRegistrationOptions $createPasskeyRegistrationOptions,
         PasskeyCeremony $passkeyCeremony,
     ): Response {
+        // The browser keeps the props of a page in its history, and shows them again on Back without asking
+        // the server. These hold the setup key and the recovery codes: encrypted, they are lost once sign-out clears their key.
+        Inertia::encryptHistory();
+
         return Inertia::render('account/security', [
             'hasEnabledTwoFactorAuthentication' => $user->hasEnabledTwoFactorAuthentication(),
             // A setup is pending from its secret to its first code.

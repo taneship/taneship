@@ -33,6 +33,12 @@ it('renders the security page for a user who confirmed their password', function
             ->missing('passkeyOptions'));
 });
 
+it('has the browser encrypt the page in its history', function (): void {
+    signInWithConfirmedPassword(User::factory()->create());
+
+    expect($this->get(route('account.security.edit'))->inertiaPage())->toHaveKey('encryptHistory', true);
+});
+
 it('shows the QR code and the setup key while a setup is pending', function (): void {
     config(['app.name' => 'Acme Cloud']);
     $user = User::factory()->withTwoFactorAuthentication()->create(['email' => 'jane@example.com', 'two_factor_confirmed_at' => null]);

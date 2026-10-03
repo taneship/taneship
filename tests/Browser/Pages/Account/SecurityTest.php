@@ -186,6 +186,25 @@ it('regenerates the recovery codes in place', function (): void {
     $page->assertDontSee($previousRecoveryCode)->assertNoSmoke();
 });
 
+it('no longer shows the recovery codes from the browser history after sign-out', function (): void {
+    $user = User::factory()->withTwoFactorAuthentication()->create();
+    $recoveryCode = (string) $user->two_factor_recovery_codes[0];
+
+    $this->actingAs($user);
+
+    // Without the key sign-out cleared, the browser cannot read the page back: it asks the server, which leads to sign-in.
+    confirmPassword(visit(route('account.security.edit')))
+        ->press(trans('identity.security.two_factor_authentication.recovery_codes.show'))
+        ->assertSee($recoveryCode)
+        ->click('[data-slot="sidebar-footer"] button')
+        ->click(trans('identity.user_menu.sign_out'))
+        ->assertPathIs('/')
+        ->back()
+        ->assertPathIs('/login')
+        ->assertDontSee($recoveryCode)
+        ->assertNoSmoke();
+});
+
 it('disables two-factor authentication', function (): void {
     $user = User::factory()->withTwoFactorAuthentication()->create();
 
@@ -240,7 +259,8 @@ it('starts no ceremony for a name made of spaces', function (): void {
         ->assertValue('#name', '')
         ->press(trans('identity.security.passkeys.add'))
         ->assertScript('document.querySelector("#name").matches(":invalid")')
-        ->assertScript('history.state.page.props.passkeyOptions === undefined')
+        // The history holds the page encrypted, props included: the requests the page made tell instead.
+        ->assertScript('performance.getEntriesByType("resource").some((entry) => entry.name.endsWith("/account/security"))', false)
         ->assertDontSee(trans('identity.use_passkey.not_created'))
         ->assertNoSmoke();
 });
