@@ -17,7 +17,8 @@ const buttonVariants = cva(
                 ghost: 'hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50',
                 destructive:
                     // In light mode, the destructive color on its own tint falls short of 4.5:1: the text is white on the color itself.
-                    'bg-destructive text-white hover:bg-destructive/90 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:text-destructive dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40',
+                    // In dark mode, it reaches 4.5:1 on a tint of at most 15%, the footer of a dialog included.
+                    'bg-destructive text-white hover:bg-destructive/90 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/10 dark:text-destructive dark:hover:bg-destructive/15 dark:focus-visible:ring-destructive/40',
                 link: 'text-primary underline-offset-4 hover:underline',
             },
             size: {
