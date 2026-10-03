@@ -58,7 +58,7 @@
         "check": [
             "@php artisan config:clear --ansi @no_additional_args",
             "pint --test",
-            "rector process --dry-run",
+            "rector process --dry-run --clear-cache",
             "phpstan analyse",
             "@putenv XDEBUG_MODE=coverage",
             "pest --parallel --exclude-testsuite=Browser --coverage --min=90",
@@ -69,7 +69,7 @@
             "npx vp test"
         ],
         "fix": [
-            "rector process",
+            "rector process --clear-cache",
             "pint",
             "@php artisan wayfinder:generate --ansi",
             "npx vp check --fix"
