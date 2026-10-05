@@ -97,6 +97,22 @@ it('renames the user', function (): void {
         ->assertNoSmoke();
 });
 
+it('shows the name and the address as they are saved', function (): void {
+    Notification::fake();
+    $this->actingAs(User::factory()->create());
+
+    visit(route('account.profile.edit'))
+        ->clear('name')
+        ->type('name', 'Jane Smith  ')
+        ->clear('email')
+        ->type('email', 'Jane.Smith@Example.COM')
+        ->press(trans('account.profile.save'))
+        ->assertSee(trans('account.profile.updated'))
+        ->assertValue('name', 'Jane Smith')
+        ->assertValue('email', 'jane.smith@example.com')
+        ->assertNoSmoke();
+});
+
 it('renames the user on mobile', function (): void {
     $this->actingAs(User::factory()->create(['name' => 'Jane Doe']));
 
