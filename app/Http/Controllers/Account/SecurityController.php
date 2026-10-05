@@ -16,6 +16,7 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Carbon\CarbonInterface;
 use Illuminate\Container\Attributes\CurrentUser;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 use PragmaRX\Google2FA\Google2FA;
@@ -33,6 +34,7 @@ final class SecurityController
         Inertia::encryptHistory();
 
         return Inertia::render('account/security', [
+            'passwordRules' => Password::defaults()->toPasswordRulesString(),
             'hasEnabledTwoFactorAuthentication' => $user->hasEnabledTwoFactorAuthentication(),
             // A setup is pending from its secret to its first code.
             'twoFactorSetup' => fn (): ?TwoFactorSetupData => $user->two_factor_secret === null || $user->hasEnabledTwoFactorAuthentication()

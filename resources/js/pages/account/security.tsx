@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 
 import { PasskeysSection } from '@/components/passkeys-section';
+import { PasswordSection } from '@/components/password-section';
 import { TwoFactorAuthenticationSection } from '@/components/two-factor-authentication-section';
 import { useTranslation } from '@/hooks/use-translation';
 import { AccountLayout } from '@/layouts/account-layout';
@@ -9,6 +10,7 @@ import type { Passkey } from '@/types/passkey';
 import type { TwoFactorSetup } from '@/types/two-factor-setup';
 
 type AccountSecurityProps = {
+    passwordRules: string;
     hasEnabledTwoFactorAuthentication: boolean;
     twoFactorSetup: TwoFactorSetup | null;
     recoveryCodes?: string[];
@@ -16,6 +18,7 @@ type AccountSecurityProps = {
 };
 
 export default function AccountSecurity({
+    passwordRules,
     hasEnabledTwoFactorAuthentication,
     twoFactorSetup,
     recoveryCodes,
@@ -26,6 +29,7 @@ export default function AccountSecurity({
     return (
         <>
             <Head title={translate('identity.security.title')} />
+            <PasswordSection passwordRules={passwordRules} />
             <TwoFactorAuthenticationSection
                 hasEnabledTwoFactorAuthentication={hasEnabledTwoFactorAuthentication}
                 twoFactorSetup={twoFactorSetup}

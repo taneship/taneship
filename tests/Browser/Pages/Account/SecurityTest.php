@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\DisableTwoFactorAuthentication;
 use App\Models\Passkey;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 
@@ -60,6 +61,63 @@ it('renders the security page without passkeys', function (string $mode, bool $i
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('renders the password section first', function (string $mode, bool $isDark): void {
+    $this->actingAs(User::factory()->create());
+
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->assertAttribute('#app', 'data-server-rendered', 'true')
+        ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
+        ->assertScript('[...document.querySelectorAll("section[aria-labelledby]")].map((section) => section.getAttribute("aria-labelledby")).join(" ")', 'password-change two-factor-authentication passkeys')
+        ->assertSeeIn('#password-change', trans('account.security.password.title'))
+        ->assertAttribute('#current_password', 'autocomplete', 'current-password')
+        ->assertAttribute('#password', 'autocomplete', 'new-password')
+        ->assertAttribute('#password', 'passwordrules', 'minlength: 12;')
+        ->assertAttribute('#password_confirmation', 'autocomplete', 'new-password')
+        ->assertAttribute('#password_confirmation', 'passwordrules', 'minlength: 12;')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('changes the password, then clears the form', function (): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit')))
+        ->type('current_password', 'password')
+        ->type('password', 'correct horse battery')
+        ->type('password_confirmation', 'correct horse battery')
+        ->press(trans('account.security.password.submit'))
+        ->assertSee(trans('account.password.updated'))
+        ->assertPathIs('/account/security')
+        ->assertValue('#current_password', '')
+        ->assertValue('#password', '')
+        ->assertValue('#password_confirmation', '')
+        ->assertNoSmoke();
+
+    expect(Hash::check('correct horse battery', $user->refresh()->password))->toBeTrue();
+});
+
+it('shows why the current password is refused, and clears the form', function (string $mode): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->type('current_password', 'not the password')
+        ->type('password', 'correct horse battery')
+        ->type('password_confirmation', 'correct horse battery')
+        ->press(trans('account.security.password.submit'))
+        ->assertSeeIn('#current_password-error', trans('validation.current_password'))
+        ->assertValue('#current_password', '')
+        ->assertValue('#password', '')
+        ->assertValue('#password_confirmation', '')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+
+    expect(Hash::check('password', $user->refresh()->password))->toBeTrue();
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
 
 it('renders two-factor authentication disabled', function (string $mode, bool $isDark): void {
     $this->actingAs(User::factory()->create());

@@ -26,13 +26,6 @@ function passwordResetInput(User $user, array $overrides = []): array
     ];
 }
 
-// The next request comes from another browser: no session, and a guard that has not loaded the user.
-function switchBrowser(): void
-{
-    session()->flush();
-    Auth::forgetGuards();
-}
-
 it('renders the reset page for guests', function (): void {
     $this->get(route('password.reset', ['token' => 'a-token', 'email' => 'jane@example.com']))
         ->assertOk()

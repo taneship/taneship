@@ -10,6 +10,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Passkey;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Testing\TestResponse;
 use Inertia\Support\Header;
 use PragmaRX\Google2FA\Google2FA;
@@ -66,6 +67,13 @@ function registerPasskeyOn(SoftwareAuthenticator $authenticator, User $user): Pa
 function signInWithConfirmedPassword(User $user): void
 {
     test()->actingAs($user)->withSession(['auth.password_confirmed_at' => time()]);
+}
+
+// The next request comes from another browser: no session, and a guard that has not loaded the user.
+function switchBrowser(): void
+{
+    session()->flush();
+    Auth::forgetGuards();
 }
 
 /**

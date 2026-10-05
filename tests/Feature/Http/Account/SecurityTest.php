@@ -26,6 +26,7 @@ it('renders the security page for a user who confirmed their password', function
             ->where('user', ['name' => $user->name, 'email' => $user->email])
             ->where('errors', [])
             ->where('translations', json_decode(File::get(lang_path('en.json')), true))
+            ->where('passwordRules', 'minlength: 12;')
             ->where('hasEnabledTwoFactorAuthentication', false)
             ->where('twoFactorSetup', null)
             ->missing('recoveryCodes')
