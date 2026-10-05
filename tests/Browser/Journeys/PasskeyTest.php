@@ -70,6 +70,7 @@ it('confirms the password with a passkey', function (): void {
         ->assertPathIs('/dashboard')
         ->click('[data-slot="sidebar-footer"] button')
         ->click(trans('identity.user_menu.account_settings'))
+        ->click(trans('identity.account_layout.security'))
         ->assertPathIs('/confirm-password')
         ->press(trans('identity.confirm_password.passkey'))
         ->assertPathIs('/account/security')

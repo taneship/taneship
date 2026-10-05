@@ -107,5 +107,11 @@
     "identity.user_menu.sign_out": "Sign out",
     "identity.use_passkey.already_registered": "This password manager or device already holds a passkey for your account.",
     "identity.use_passkey.not_created": "Your browser could not create the passkey.",
-    "identity.use_passkey.not_used": "Your browser could not use a passkey."
+    "identity.use_passkey.not_used": "Your browser could not use a passkey.",
+    "account.account_layout.profile": "Profile",
+    "account.profile.title": "Profile",
+    "account.profile.description": "Update your name and email address.",
+    "account.profile.name": "Name",
+    "account.profile.email": "Email address",
+    "account.profile.save": "Save"
 }

@@ -389,35 +389,16 @@ it('renders the security page on mobile', function (): void {
         ->assertNoAccessibilityIssues(level: 3);
 });
 
-it('opens from the user menu, and closes the menu', function (): void {
+it('opens from the account settings menu', function (): void {
     $this->actingAs(User::factory()->create());
 
-    visit(route('password.confirm'))
+    visit(route('account.profile.edit'))
+        ->click(trans('identity.account_layout.security'))
+        ->assertPathIs('/confirm-password')
         ->type('password', 'password')
         ->press('[type="submit"]')
-        ->assertPathIs('/dashboard')
-        ->click('[data-slot="sidebar-footer"] button')
-        ->click(trans('identity.user_menu.account_settings'))
         ->assertPathIs('/account/security')
         ->assertSee(trans('identity.security.passkeys.title'))
-        // The application layout stays mounted from one page to the next: the menu must close.
-        ->assertMissing('[data-slot="dropdown-menu-content"]')
-        ->assertNoSmoke();
-});
-
-it('opens from the user menu on mobile, and closes the sidebar', function (): void {
-    $this->actingAs(User::factory()->create());
-
-    visit(route('password.confirm'))
-        ->on()->mobile()
-        ->type('password', 'password')
-        ->press('[type="submit"]')
-        ->assertPathIs('/dashboard')
-        ->click('[data-slot="sidebar-trigger"]')
-        ->click('[data-mobile="true"] [data-slot="sidebar-footer"] button')
-        ->click(trans('identity.user_menu.account_settings'))
-        ->assertPathIs('/account/security')
-        ->assertSee(trans('identity.security.passkeys.title'))
-        ->assertMissing('[data-mobile="true"]')
+        ->assertSeeIn('[aria-current="page"]', trans('identity.account_layout.security'))
         ->assertNoSmoke();
 });

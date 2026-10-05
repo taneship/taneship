@@ -12,4 +12,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/dashboard', fn (): Response => Inertia::render('dashboard'))->name('dashboard');
 });
 
+// Wayfinder drops the account.* routes it meets before the route named account: account.php comes first.
+require __DIR__.'/account.php';
 require __DIR__.'/identity.php';

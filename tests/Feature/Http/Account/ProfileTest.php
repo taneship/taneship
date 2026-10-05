@@ -1,0 +1,149 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\User;
+use Illuminate\Support\Facades\File;
+use Inertia\Testing\AssertableInertia;
+
+it('renders the profile page for a signed-in user', function (): void {
+    $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
+
+    $this->actingAs($user)
+        ->get(route('account.profile.edit'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->component('account/profile')
+            ->where('name', config('app.name'))
+            ->where('theme', 'system')
+            ->where('isSidebarOpen', true)
+            ->where('user', ['name' => 'Jane Doe', 'email' => 'jane@example.com'])
+            ->where('errors', [])
+            ->where('translations', json_decode(File::get(lang_path('en.json')), true))
+            ->where('profile', ['name' => 'Jane Doe', 'email' => 'jane@example.com'])
+            ->where('hasVerifiedEmail', true));
+});
+
+it('renders the profile page for a user whose address is unverified', function (): void {
+    $this->actingAs(User::factory()->unverified()->create())
+        ->get(route('account.profile.edit'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->component('account/profile')
+            ->where('hasVerifiedEmail', false));
+});
+
+it('sends guests to the sign-in page', function (): void {
+    $this->get(route('account.profile.edit'))->assertRedirect(route('login'));
+    $this->put(route('account.profile.update'), ['name' => 'Jane Doe', 'email' => 'jane@example.com'])->assertRedirect(route('login'));
+});
+
+it('turns guests away', function (): void {
+    $this->getJson(route('account.profile.edit'))->assertUnauthorized();
+});
+
+it('redirects the account settings to the profile page', function (): void {
+    $this->actingAs(User::factory()->unverified()->create())
+        ->get(route('account'))
+        ->assertRedirect(route('account.profile.edit'));
+});
+
+it('sends guests from the account settings to the sign-in page', function (): void {
+    $this->get(route('account'))->assertRedirect(route('login'));
+});
+
+it('saves the profile and leads back with a toast', function (): void {
+    $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
+
+    $this->actingAs($user)
+        ->from(route('account.profile.edit'))
+        ->put(route('account.profile.update'), ['name' => 'Jane Smith', 'email' => 'jane.smith@example.com'])
+        ->assertRedirect(route('account.profile.edit'))
+        ->assertSessionHasNoErrors()
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => trans('account.profile.updated')]);
+
+    expect($user->refresh()->name)->toBe('Jane Smith')
+        ->and($user->email)->toBe('jane.smith@example.com');
+});
+
+it('shares the new name with the next page', function (): void {
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    $this->actingAs($user)->put(route('account.profile.update'), ['name' => 'Jane Smith', 'email' => 'jane@example.com']);
+
+    $this->get(route('account.profile.edit'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('user', ['name' => 'Jane Smith', 'email' => 'jane@example.com'])
+            ->where('profile', ['name' => 'Jane Smith', 'email' => 'jane@example.com']));
+});
+
+it('stores the address in lowercase', function (): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->put(route('account.profile.update'), ['name' => 'Jane Doe', 'email' => 'Jane@Example.COM']);
+
+    expect($user->refresh()->email)->toBe('jane@example.com');
+});
+
+it('keeps the address of the user, whatever its case', function (string $email): void {
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    $this->actingAs($user)
+        ->put(route('account.profile.update'), ['name' => 'Jane Smith', 'email' => $email])
+        ->assertSessionHasNoErrors();
+
+    expect($user->refresh()->name)->toBe('Jane Smith')
+        ->and($user->email)->toBe('jane@example.com');
+})->with(['same case' => 'jane@example.com', 'other case' => 'Jane@Example.COM']);
+
+it('refuses an address another user has, whatever its case', function (string $email): void {
+    User::factory()->create(['email' => 'john@example.com']);
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    $this->actingAs($user)
+        ->from(route('account.profile.edit'))
+        ->put(route('account.profile.update'), ['name' => 'Jane Doe', 'email' => $email])
+        ->assertRedirect(route('account.profile.edit'))
+        ->assertSessionHasErrors(['email' => trans('validation.unique', ['attribute' => 'email'])]);
+
+    expect($user->refresh()->email)->toBe('jane@example.com');
+})->with(['same case' => 'john@example.com', 'other case' => 'John@Example.COM']);
+
+it('limits the name and the address to 255 characters', function (): void {
+    // A valid address of 260 characters: the email rule accepts it, the length rule does not.
+    $email = str_repeat('a', 64).'@'.str_repeat('b', 63).'.'.str_repeat('c', 63).'.'.str_repeat('d', 63).'.com';
+
+    $this->actingAs(User::factory()->create())
+        ->put(route('account.profile.update'), ['name' => str_repeat('a', 256), 'email' => $email])
+        ->assertSessionHasErrors([
+            'name' => trans('validation.max.string', ['attribute' => 'name', 'max' => 255]),
+            'email' => trans('validation.max.string', ['attribute' => 'email', 'max' => 255]),
+        ]);
+});
+
+it('validates the form', function (array $input, array $errors): void {
+    $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
+
+    $this->actingAs($user)
+        ->put(route('account.profile.update'), $input)
+        ->assertSessionHasErrors($errors);
+
+    expect($user->refresh()->name)->toBe('Jane Doe')
+        ->and($user->email)->toBe('jane@example.com');
+})->with([
+    'empty' => [[], ['name', 'email']],
+    'not an address' => [['name' => 'Jane Smith', 'email' => 'jane'], ['email']],
+]);
+
+it('refuses a seventh request within a minute', function (): void {
+    $user = User::factory()->create(['name' => 'Jane Doe']);
+    $this->actingAs($user);
+
+    foreach (range(1, 6) as $request) {
+        $this->put(route('account.profile.update'), [])->assertSessionHasErrors(['name', 'email']);
+    }
+
+    $this->put(route('account.profile.update'), ['name' => 'Jane Smith', 'email' => $user->email])->assertTooManyRequests();
+
+    expect($user->refresh()->name)->toBe('Jane Doe');
+});

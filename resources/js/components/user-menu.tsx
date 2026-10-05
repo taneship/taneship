@@ -58,7 +58,7 @@ export function UserMenu({ user }: UserMenuProps) {
                             align="end"
                             className="min-w-56"
                         >
-                            <DropdownMenuItem render={<Link href={account.security.edit()} />}>
+                            <DropdownMenuItem render={<Link href={account.profile.edit()} />}>
                                 <SettingsIcon />
                                 {translate('identity.user_menu.account_settings')}
                             </DropdownMenuItem>

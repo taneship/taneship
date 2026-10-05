@@ -18,6 +18,10 @@ export function AccountLayout({ children }: AccountLayoutProps) {
 
     const items = [
         {
+            label: translate('account.account_layout.profile'),
+            route: account.profile.edit(),
+        },
+        {
             label: translate('identity.account_layout.security'),
             route: account.security.edit(),
         },
