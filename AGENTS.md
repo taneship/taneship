@@ -58,12 +58,12 @@ npx vp check                                                            # Oxfmt,
 npx vp test                                                             # Vitest
 ```
 
-| Where                   | What runs                                                                                                                                                                                              |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `composer check`        | Every gate except the browser tests, Lighthouse, commit messages and dependency audits                                                                                                                 |
-| `composer test:browser` | The browser tests: every page and the critical journeys, rendered on the server. They run locally, not in CI                                                                                           |
-| Git hooks               | Before a commit, Rector and Pint on staged PHP files and `vp check --fix` on staged TypeScript and CSS. On a commit, the commit message check                                                          |
-| CI                      | `composer check` against SQLite, PostgreSQL and MySQL, Lighthouse on the public pages (at least 0.95 on mobile in every category audited), the commit messages, and the dependency audits, also weekly |
+| Where                   | What runs                                                                                                                                                                        |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `composer check`        | Every gate except the browser tests, Lighthouse, commit messages and dependency audits                                                                                           |
+| `composer test:browser` | The browser tests: every page and the critical journeys, rendered on the server. They run locally, not in CI                                                                     |
+| Git hooks               | Before a commit, Rector and Pint on staged PHP files and `vp check --fix` on staged TypeScript and CSS. On a commit, the commit message check                                    |
+| CI                      | `composer check` against SQLite, Lighthouse on the public pages (at least 0.95 on mobile in every category audited), the commit messages, and the dependency audits, also weekly |
 
 `composer check` and `composer fix` clear Rector's cache first. The cache holds one verdict per file, so it still calls a file clean when a change in another file, such as a helper added to `tests/Pest.php`, makes Rector want to rewrite it. The pre-commit hook gives Rector the staged files alone and can miss such a rewrite: `composer check` decides.
 
