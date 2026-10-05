@@ -25,7 +25,7 @@ final class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => Config::string('app.name'),
-            'theme' => Theme::System,
+            'theme' => ($user = $request->user()) === null ? Theme::System : $user->theme,
             'isSidebarOpen' => $request->cookie('sidebar_state') !== 'false',
             'user' => fn (): ?UserData => ($user = $request->user()) === null ? null : new UserData($user->name, $user->email),
             // The interface text: lang/<locale>.json, which Laravel loads under the * group.

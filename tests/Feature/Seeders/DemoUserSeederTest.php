@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\Theme;
 use App\Models\User;
 use Database\Seeders\DemoUserSeeder;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,7 @@ it('creates the demo user', function (): void {
     expect($user->name)->toBe('Demo User')
         ->and($user->email)->toBe('demo@example.com')
         ->and($user->hasVerifiedEmail())->toBeTrue()
+        ->and($user->theme)->toBe(Theme::System)
         ->and(Auth::validate(['email' => 'demo@example.com', 'password' => 'password']))->toBeTrue();
 });
 

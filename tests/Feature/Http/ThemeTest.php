@@ -3,19 +3,9 @@
 declare(strict_types=1);
 
 use App\Enums\Theme;
-use Illuminate\Support\Facades\Route;
+use App\Models\User;
 use Illuminate\Support\Facades\Vite;
-use Inertia\Inertia;
-use Inertia\Response;
 use Inertia\Testing\AssertableInertia;
-
-// Free shares the system theme with everyone: these routes stand in for a stored preference.
-function routeWithTheme(Theme $theme): string
-{
-    Route::middleware('web')->get('/theme-'.$theme->value, fn (): Response => Inertia::render('welcome', ['theme' => $theme]));
-
-    return '/theme-'.$theme->value;
-}
 
 const DARK_SCHEME_SCRIPT = "window.matchMedia('(prefers-color-scheme: dark)')";
 
@@ -24,19 +14,35 @@ it('shares the system theme with guests', function (): void {
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page->where('theme', 'system'));
 });
 
+it('shares the theme of the signed-in user', function (): void {
+    $this->actingAs(User::factory()->create(['theme' => Theme::Dark]))
+        ->get(route('dashboard'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page->where('theme', 'dark'));
+});
+
 it('marks the first response dark when the theme is dark', function (): void {
-    $this->get(routeWithTheme(Theme::Dark))
+    $this->actingAs(User::factory()->create(['theme' => Theme::Dark]))
+        ->get(route('dashboard'))
         ->assertSee('<html lang="en" class="dark">', false)
         ->assertDontSee(DARK_SCHEME_SCRIPT, false);
 });
 
 it('leaves the first response light when the theme is light', function (): void {
-    $this->get(routeWithTheme(Theme::Light))
+    $this->actingAs(User::factory()->create(['theme' => Theme::Light]))
+        ->get(route('dashboard'))
         ->assertSee('<html lang="en">', false)
         ->assertDontSee(DARK_SCHEME_SCRIPT, false);
 });
 
 it('follows the browser from the first response when the theme is system', function (): void {
+    // A new user holds the default theme before any read from the database.
+    $this->actingAs(User::factory()->create())
+        ->get(route('dashboard'))
+        ->assertSee('<html lang="en">', false)
+        ->assertSee(DARK_SCHEME_SCRIPT, false);
+});
+
+it('follows the browser from the first response for guests', function (): void {
     $this->get(route('home'))
         ->assertSee('<html lang="en">', false)
         ->assertSee(DARK_SCHEME_SCRIPT, false);

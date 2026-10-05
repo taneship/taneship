@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Theme;
 use App\Notifications\ResetPassword;
 use App\Notifications\VerifyEmail;
 use Database\Factories\UserFactory;
@@ -25,6 +26,16 @@ final class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    /**
+     * The column's default, held before any read from the database.
+     *
+     * @var array<string, mixed>
+     */
+    #[\Override]
+    protected $attributes = [
+        'theme' => Theme::System->value,
+    ];
 
     /**
      * @return HasMany<Passkey, $this>
@@ -80,6 +91,7 @@ final class User extends Authenticatable implements MustVerifyEmail
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
+            'theme' => Theme::class,
         ];
     }
 }
