@@ -17,6 +17,8 @@ jobs:
       APP_ENV: production
       APP_DEBUG: false
       INERTIA_SSR_THROW_ON_ERROR: true
+      # Caddy, below, stands in front of the application: its scheme is the one the browser used.
+      TRUSTED_PROXIES: 127.0.0.1
       VP_GIT_HOOKS: 0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,12 +52,28 @@ jobs:
           # .env.example serves localhost, which may resolve to ::1: the proxy below expects 127.0.0.1.
           php artisan serve --host=127.0.0.1 --port=8000 > "$RUNNER_TEMP/serve.log" 2>&1 &
 
-          # php artisan serve compresses nothing, where every production server does: Caddy compresses
-          # its responses, as one would.
-          printf ':8080 {\n\tencode zstd gzip\n\treverse_proxy 127.0.0.1:8000\n}\n' > "$RUNNER_TEMP/Caddyfile"
+          # php artisan serve compresses nothing and speaks HTTP/1.1, where every production server
+          # compresses its responses and serves them over HTTP/2: Caddy does both, as one would. A browser
+          # speaks HTTP/2 over TLS only, so Caddy signs a certificate of its own, which Lighthouse's
+          # Chrome accepts (lighthouserc.json).
+          cat > "$RUNNER_TEMP/Caddyfile" <<'CADDYFILE'
+          {
+              auto_https disable_redirects
+              skip_install_trust
+              servers {
+                  protocols h1 h2
+              }
+          }
+
+          https://127.0.0.1:8443 {
+              tls internal
+              encode zstd gzip
+              reverse_proxy 127.0.0.1:8000
+          }
+          CADDYFILE
           docker run --detach --network host --volume "$RUNNER_TEMP/Caddyfile:/etc/caddy/Caddyfile" caddy:2.11
 
-          curl --silent --fail --retry 30 --retry-delay 1 --retry-all-errors --output /dev/null http://127.0.0.1:8080/
+          curl --silent --fail --insecure --retry 30 --retry-delay 1 --retry-all-errors --output /dev/null https://127.0.0.1:8443/
 
       - run: npx --yes @lhci/cli@0.15.1 autorun
 

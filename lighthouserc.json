@@ -2,13 +2,16 @@
     "ci": {
         "collect": {
             "url": [
-                "http://127.0.0.1:8080/",
-                "http://127.0.0.1:8080/login",
-                "http://127.0.0.1:8080/register",
-                "http://127.0.0.1:8080/forgot-password",
-                "http://127.0.0.1:8080/reset-password/sample-token"
+                "https://127.0.0.1:8443/",
+                "https://127.0.0.1:8443/login",
+                "https://127.0.0.1:8443/register",
+                "https://127.0.0.1:8443/forgot-password",
+                "https://127.0.0.1:8443/reset-password/sample-token"
             ],
-            "numberOfRuns": 3
+            "numberOfRuns": 3,
+            "settings": {
+                "chromeFlags": "--ignore-certificate-errors"
+            }
         },
         "assert": {
             "assertMatrix": [
