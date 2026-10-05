@@ -23,6 +23,6 @@ final class UpdateThemeRequest extends FormRequest
 
     public function toData(): Theme
     {
-        return $this->enum('theme', Theme::class) ?? Theme::System;
+        return Theme::from($this->string('theme')->value());
     }
 }
