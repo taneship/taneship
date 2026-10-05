@@ -6,7 +6,9 @@ use App\Actions\UpdateProfile;
 use App\Data\ProfileData;
 use App\Exceptions\EmailAlreadyTakenException;
 use App\Models\User;
+use App\Notifications\EmailChanged;
 use App\Notifications\VerifyEmail;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
@@ -85,4 +87,28 @@ it('refuses an address that another request takes first', function (): void {
     // No query follows: PostgreSQL ends the transaction of the test at the refused update.
     expect(fn () => app(UpdateProfile::class)->handle($user, new ProfileData(name: 'Jane Doe', email: 'jane.smith@example.com')))
         ->toThrow(EmailAlreadyTakenException::class);
+});
+
+it('tells the former address, once verified, that the address changed', function (): void {
+    Notification::fake();
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    app(UpdateProfile::class)->handle($user, new ProfileData(name: 'Jane Doe', email: 'jane.smith@example.com'));
+
+    Notification::assertSentOnDemandTimes(EmailChanged::class);
+    Notification::assertSentOnDemand(
+        EmailChanged::class,
+        fn (EmailChanged $notification, array $channels, AnonymousNotifiable $notifiable): bool => $notifiable->routes === ['mail' => 'jane@example.com']
+            && $notification->newEmail === 'jane.smith@example.com',
+    );
+});
+
+it('tells nothing to a former address that was never verified', function (): void {
+    Notification::fake();
+    $user = User::factory()->unverified()->create(['email' => 'jane@example.com']);
+
+    app(UpdateProfile::class)->handle($user, new ProfileData(name: 'Jane Doe', email: 'jane.smith@example.com'));
+
+    Notification::assertSentOnDemandTimes(EmailChanged::class, 0);
+    Notification::assertSentToTimes($user, VerifyEmail::class);
 });

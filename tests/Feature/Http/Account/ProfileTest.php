@@ -3,10 +3,15 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Notifications\EmailChanged;
 use App\Notifications\VerifyEmail;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
+use Symfony\Component\Mailer\SentMessage;
 
 it('renders the profile page for a signed-in user', function (): void {
     $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
@@ -81,6 +86,50 @@ it('asks the new address to be verified', function (): void {
             ->where('hasVerifiedEmail', false));
 
     Notification::assertSentToTimes($user, VerifyEmail::class);
+});
+
+it('tells the former address that the address changed', function (): void {
+    Notification::fake();
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    $this->actingAs($user)->put(route('account.profile.update'), ['name' => 'Jane Doe', 'email' => 'jane.smith@example.com']);
+
+    Notification::assertSentOnDemand(EmailChanged::class, function (EmailChanged $notification, array $channels, AnonymousNotifiable $notifiable): bool {
+        $mail = $notification->toMail($notifiable);
+
+        expect($notifiable->routes)->toBe(['mail' => 'jane@example.com'])
+            ->and($mail->subject)->toBe(trans('account.profile.email_changed.subject'))
+            ->and($mail->introLines)->toBe([
+                trans('account.profile.email_changed.notice', ['name' => config('app.name'), 'email' => 'jane.smith@example.com']),
+                trans('account.profile.email_changed.ignore'),
+                trans('account.profile.email_changed.recover'),
+            ])
+            ->and((string) $mail->render())->toContain('jane.smith@example.com');
+
+        return true;
+    });
+});
+
+it('sends each address its mail once a worker runs', function (): void {
+    config(['queue.default' => 'database']);
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    $this->actingAs($user)->put(route('account.profile.update'), ['name' => 'Jane Doe', 'email' => 'jane.smith@example.com']);
+
+    expect(DB::table('jobs')->count())->toBe(2)
+        ->and($this->artisan('queue:work', ['--stop-when-empty' => true]))->toBe(0)
+        ->and(DB::table('failed_jobs')->count())->toBe(0);
+
+    $subjectsByAddress = collect(Mail::mailer()->getSymfonyTransport()->messages())
+        ->mapWithKeys(fn (SentMessage $message): array => [
+            $message->getEnvelope()->getRecipients()[0]->getAddress() => $message->getOriginalMessage()->getSubject(),
+        ])
+        ->all();
+
+    expect($subjectsByAddress)->toBe([
+        'jane@example.com' => trans('account.profile.email_changed.subject'),
+        'jane.smith@example.com' => trans('identity.verification.mail.subject'),
+    ]);
 });
 
 it('shares the new name with the next page', function (): void {

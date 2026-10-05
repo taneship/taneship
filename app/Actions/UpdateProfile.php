@@ -7,8 +7,10 @@ namespace App\Actions;
 use App\Data\ProfileData;
 use App\Exceptions\EmailAlreadyTakenException;
 use App\Models\User;
+use App\Notifications\EmailChanged;
 use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Notification;
 
 final readonly class UpdateProfile
 {
@@ -17,7 +19,7 @@ final readonly class UpdateProfile
 
     public function handle(User $user, ProfileData $profile): void
     {
-        // The broker finds a token by the address of the user it is given: this copy keeps the former one.
+        // The user as stored: the former address, and whether it was verified.
         $userBeforeUpdate = clone $user;
 
         $user->fill([
@@ -40,9 +42,15 @@ final readonly class UpdateProfile
         }
 
         if ($hasNewEmail) {
-            // A token is kept by address: left behind, a link sent to the former address would reset
-            // the password of an account opened later with it.
+            // A token is kept by address, and the broker finds it by the address of the user it is given.
+            // Left behind, a link sent to the former address would reset the password of an account opened later with it.
             $this->passwordBroker->deleteToken($userBeforeUpdate);
+
+            // Whoever holds a session can change the address. The former one is told, unless it was
+            // never verified: it may be a typing mistake, and the address of someone else.
+            if ($userBeforeUpdate->hasVerifiedEmail()) {
+                Notification::route('mail', $userBeforeUpdate->email)->notify(new EmailChanged($user->email));
+            }
 
             $user->sendEmailVerificationNotification();
         }
