@@ -63,13 +63,15 @@ it('renders the security page without passkeys', function (string $mode, bool $i
 })->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
 
 it('renders the password section first', function (string $mode, bool $isDark): void {
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(User::factory()->create(['email' => 'jane@example.com']));
 
     confirmPassword(visit(route('account.security.edit'))->{$mode}())
         ->assertAttribute('#app', 'data-server-rendered', 'true')
         ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
         ->assertScript('[...document.querySelectorAll("section[aria-labelledby]")].map((section) => section.getAttribute("aria-labelledby")).join(" ")', 'password-change two-factor-authentication passkeys delete-account')
         ->assertSeeIn('#password-change', trans('account.security.password.title'))
+        // Hidden, and without a name: password managers read whose password changes, the form does not send it.
+        ->assertScript('[...document.querySelectorAll("[aria-labelledby=password-change] input[autocomplete=username][hidden]")].map((input) => input.name + input.value).join()', 'jane@example.com')
         ->assertAttribute('#current_password', 'autocomplete', 'current-password')
         ->assertAttribute('#password', 'autocomplete', 'new-password')
         ->assertAttribute('#password', 'passwordrules', 'minlength: 12;')

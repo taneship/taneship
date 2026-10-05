@@ -1,4 +1,4 @@
-import { Form } from '@inertiajs/react';
+import { Form, usePage } from '@inertiajs/react';
 
 import { InputField } from '@/components/input-field';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ type PasswordSectionProps = {
 
 export function PasswordSection({ passwordRules }: PasswordSectionProps) {
     const { translate } = useTranslation();
+    const { user } = usePage().props;
 
     // The heading is not named password: that id belongs to the field of the new one.
     return (
@@ -32,6 +33,14 @@ export function PasswordSection({ passwordRules }: PasswordSectionProps) {
             >
                 {({ errors, processing }) => (
                     <FieldGroup>
+                        {/* For password managers, which read here whose password changes. Without a name, it is not sent. */}
+                        <input
+                            type="text"
+                            autoComplete="username"
+                            value={user?.email}
+                            readOnly
+                            hidden
+                        />
                         <InputField
                             name="current_password"
                             label={translate('account.security.password.current_password')}
