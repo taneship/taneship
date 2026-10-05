@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 
+import { DeleteAccountSection } from '@/components/delete-account-section';
 import { PasskeysSection } from '@/components/passkeys-section';
 import { PasswordSection } from '@/components/password-section';
 import { TwoFactorAuthenticationSection } from '@/components/two-factor-authentication-section';
@@ -36,6 +37,7 @@ export default function AccountSecurity({
                 recoveryCodes={recoveryCodes}
             />
             <PasskeysSection passkeys={passkeys} />
+            <DeleteAccountSection />
         </>
     );
 }

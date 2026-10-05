@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Notifications\VerifyEmail;
 use Illuminate\Notifications\SendQueuedNotifications;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\URL;
@@ -72,6 +74,22 @@ it('queues the mail', function (): void {
         SendQueuedNotifications::class,
         fn (SendQueuedNotifications $job): bool => $job->notification instanceof VerifyEmail,
     );
+});
+
+it('drops the queued mail of a user deleted before a worker sends it', function (): void {
+    config(['queue.default' => 'database']);
+    $user = User::factory()->unverified()->create();
+
+    $this->actingAs($user)->post(route('verification.send'));
+
+    expect(DB::table('jobs')->count())->toBe(1);
+
+    $user->delete();
+
+    expect($this->artisan('queue:work', ['--once' => true]))->toBe(0)
+        ->and(DB::table('jobs')->count())->toBe(0)
+        ->and(DB::table('failed_jobs')->count())->toBe(0)
+        ->and(Mail::mailer()->getSymfonyTransport()->messages())->toBeEmpty();
 });
 
 it('leads a verified user to the dashboard without sending the mail', function (): void {

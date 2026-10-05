@@ -68,7 +68,7 @@ it('renders the password section first', function (string $mode, bool $isDark): 
     confirmPassword(visit(route('account.security.edit'))->{$mode}())
         ->assertAttribute('#app', 'data-server-rendered', 'true')
         ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
-        ->assertScript('[...document.querySelectorAll("section[aria-labelledby]")].map((section) => section.getAttribute("aria-labelledby")).join(" ")', 'password-change two-factor-authentication passkeys')
+        ->assertScript('[...document.querySelectorAll("section[aria-labelledby]")].map((section) => section.getAttribute("aria-labelledby")).join(" ")', 'password-change two-factor-authentication passkeys delete-account')
         ->assertSeeIn('#password-change', trans('account.security.password.title'))
         ->assertAttribute('#current_password', 'autocomplete', 'current-password')
         ->assertAttribute('#password', 'autocomplete', 'new-password')
@@ -433,6 +433,52 @@ it('keeps the passkey when the removal is canceled', function (): void {
         ->assertNoSmoke();
 
     $this->assertModelExists($passkey);
+});
+
+it('asks before deleting the account', function (string $mode, bool $isDark): void {
+    $this->actingAs(User::factory()->create());
+
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->assertSeeIn('#delete-account', trans('account.security.delete_account.title'))
+        ->click('[aria-labelledby="delete-account"] button')
+        ->assertScript("document.documentElement.classList.contains('dark')", $isDark)
+        ->assertSeeIn('[role="alertdialog"]', trans('account.security.delete_account.deletion.title'))
+        ->assertSeeIn('[role="alertdialog"]', trans('account.security.delete_account.deletion.description'))
+        // The dialog fades in: axe would skip it, still transparent, or measure its contrast halfway.
+        ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('deletes the account once confirmed, and leads to the welcome page', function (): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit')))
+        ->click('[aria-labelledby="delete-account"] button')
+        ->click('[data-slot="alert-dialog-action"]')
+        ->assertPathIs('/')
+        ->assertSee(trans('account.deleted'))
+        ->assertSee(trans('identity.welcome.sign_in'))
+        ->assertNoSmoke();
+
+    $this->assertModelMissing($user);
+});
+
+it('keeps the account when the deletion is canceled', function (): void {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    confirmPassword(visit(route('account.security.edit')))
+        ->click('[aria-labelledby="delete-account"] button')
+        ->press(trans('account.security.delete_account.deletion.cancel'))
+        ->assertMissing('[role="alertdialog"]')
+        ->assertPathIs('/account/security')
+        ->assertNoSmoke();
+
+    $this->assertModelExists($user);
 });
 
 it('renders the security page on mobile', function (): void {

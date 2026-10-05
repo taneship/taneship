@@ -5,7 +5,9 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Notifications\ResetPassword;
 use Illuminate\Notifications\SendQueuedNotifications;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Queue;
@@ -80,6 +82,22 @@ it('encrypts the queued mail, which carries the token', function (): void {
         SendQueuedNotifications::class,
         fn (SendQueuedNotifications $job): bool => $job->shouldBeEncrypted,
     );
+});
+
+it('drops the queued mail of a user deleted before a worker sends it', function (): void {
+    config(['queue.default' => 'database']);
+    $user = User::factory()->create();
+
+    $this->post(route('password.email'), ['email' => $user->email]);
+
+    expect(DB::table('jobs')->count())->toBe(1);
+
+    $user->delete();
+
+    expect($this->artisan('queue:work', ['--once' => true]))->toBe(0)
+        ->and(DB::table('jobs')->count())->toBe(0)
+        ->and(DB::table('failed_jobs')->count())->toBe(0)
+        ->and(Mail::mailer()->getSymfonyTransport()->messages())->toBeEmpty();
 });
 
 it('gives the same answer whether the address has an account, has none, or asked less than a minute ago', function (string $email): void {
