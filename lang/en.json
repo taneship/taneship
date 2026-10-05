@@ -109,6 +109,7 @@
     "identity.use_passkey.not_created": "Your browser could not create the passkey.",
     "identity.use_passkey.not_used": "Your browser could not use a passkey.",
     "account.account_layout.profile": "Profile",
+    "account.account_layout.preferences": "Preferences",
     "account.profile.title": "Profile",
     "account.profile.description": "Update your name and email address.",
     "account.profile.name": "Name",
@@ -116,5 +117,11 @@
     "account.profile.save": "Save",
     "account.profile.unverified": "Your email address is unverified. Open the link we sent to it.",
     "account.profile.resend": "Send the link again",
+    "account.preferences.title": "Preferences",
+    "account.preferences.theme.title": "Theme",
+    "account.preferences.theme.description": "Choose how the interface looks. System follows your device's setting.",
+    "account.preferences.theme.light": "Light",
+    "account.preferences.theme.dark": "Dark",
+    "account.preferences.theme.system": "System",
     "account.verify_email.change_address": "Change your email address"
 }

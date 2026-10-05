@@ -25,6 +25,10 @@ export function AccountLayout({ children }: AccountLayoutProps) {
             label: translate('identity.account_layout.security'),
             route: account.security.edit(),
         },
+        {
+            label: translate('account.account_layout.preferences'),
+            route: account.preferences.edit(),
+        },
     ];
 
     return (

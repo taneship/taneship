@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Account\PreferencesController;
 use App\Http\Controllers\Account\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,4 +12,6 @@ Route::middleware('auth')->group(function (): void {
     Route::put('/account/profile', [ProfileController::class, 'update'])
         ->middleware('throttle:6,1,account.profile.update')
         ->name('account.profile.update');
+    Route::get('/account/preferences', [PreferencesController::class, 'edit'])->name('account.preferences.edit');
+    Route::put('/account/preferences', [PreferencesController::class, 'update'])->name('account.preferences.update');
 });
