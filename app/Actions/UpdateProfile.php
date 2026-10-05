@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Data\ProfileData;
+use App\Exceptions\EmailAlreadyTakenException;
 use App\Models\User;
 use Illuminate\Auth\Passwords\PasswordBroker;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 final readonly class UpdateProfile
 {
@@ -30,7 +32,12 @@ final readonly class UpdateProfile
             $user->email_verified_at = null;
         }
 
-        $user->save();
+        try {
+            $user->save();
+        } catch (UniqueConstraintViolationException) {
+            // Another request took the address since it was validated: the unique index decides.
+            throw EmailAlreadyTakenException::for($user->email);
+        }
 
         if ($hasNewEmail) {
             // A token is kept by address: left behind, a link sent to the former address would reset

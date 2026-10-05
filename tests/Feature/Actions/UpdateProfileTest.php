@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Actions\UpdateProfile;
 use App\Data\ProfileData;
+use App\Exceptions\EmailAlreadyTakenException;
 use App\Models\User;
 use App\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\DB;
@@ -71,4 +72,17 @@ it('keeps the password reset token when the address stays the same', function ()
     app(UpdateProfile::class)->handle($user, new ProfileData(name: 'Jane Smith', email: 'jane@example.com'));
 
     expect(DB::table('password_reset_tokens')->pluck('email')->all())->toBe(['jane@example.com']);
+});
+
+it('refuses an address that another request takes first', function (): void {
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    // The other request takes the address between the validation and the save of this one.
+    User::updating(function (): void {
+        User::factory()->create(['email' => 'jane.smith@example.com']);
+    });
+
+    // No query follows: PostgreSQL ends the transaction of the test at the refused update.
+    expect(fn () => app(UpdateProfile::class)->handle($user, new ProfileData(name: 'Jane Doe', email: 'jane.smith@example.com')))
+        ->toThrow(EmailAlreadyTakenException::class);
 });

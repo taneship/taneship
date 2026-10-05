@@ -129,6 +129,22 @@ it('refuses an address another user has, whatever its case', function (string $e
     expect($user->refresh()->email)->toBe('jane@example.com');
 })->with(['same case' => 'john@example.com', 'other case' => 'John@Example.COM']);
 
+it('refuses an address that another request takes first, as one already taken', function (): void {
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    // The other request takes the address between the validation and the save of this one.
+    User::updating(function (): void {
+        User::factory()->create(['email' => 'jane.smith@example.com']);
+    });
+
+    // No query follows: PostgreSQL ends the transaction of the test at the refused update.
+    $this->actingAs($user)
+        ->from(route('account.profile.edit'))
+        ->put(route('account.profile.update'), ['name' => 'Jane Doe', 'email' => 'jane.smith@example.com'])
+        ->assertRedirect(route('account.profile.edit'))
+        ->assertSessionHasErrors(['email' => trans('validation.unique', ['attribute' => 'email'])]);
+});
+
 it('limits the name and the address to 255 characters', function (): void {
     // A valid address of 260 characters: the email rule accepts it, the length rule does not.
     $email = str_repeat('a', 64).'@'.str_repeat('b', 63).'.'.str_repeat('c', 63).'.'.str_repeat('d', 63).'.com';
