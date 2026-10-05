@@ -6,11 +6,18 @@ namespace App\Actions;
 
 use App\Data\ProfileData;
 use App\Models\User;
+use Illuminate\Auth\Passwords\PasswordBroker;
 
 final readonly class UpdateProfile
 {
+    // Laravel's own broker, not its contract, which cannot delete a token.
+    public function __construct(private PasswordBroker $passwordBroker) {}
+
     public function handle(User $user, ProfileData $profile): void
     {
+        // The broker finds a token by the address of the user it is given: this copy keeps the former one.
+        $userBeforeUpdate = clone $user;
+
         $user->fill([
             'name' => $profile->name,
             'email' => $profile->email,
@@ -26,6 +33,10 @@ final readonly class UpdateProfile
         $user->save();
 
         if ($hasNewEmail) {
+            // A token is kept by address: left behind, a link sent to the former address would reset
+            // the password of an account opened later with it.
+            $this->passwordBroker->deleteToken($userBeforeUpdate);
+
             $user->sendEmailVerificationNotification();
         }
     }

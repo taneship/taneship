@@ -6,7 +6,9 @@ use App\Actions\UpdateProfile;
 use App\Data\ProfileData;
 use App\Models\User;
 use App\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 
 it('saves the name and the address', function (): void {
     $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
@@ -49,3 +51,24 @@ it('keeps the verification when the address stays the same', function (string $e
     expect($user->refresh()->hasVerifiedEmail())->toBeTrue();
     Notification::assertNothingSent();
 })->with(['same case' => 'jane@example.com', 'other case' => 'Jane@Example.COM']);
+
+it('removes the password reset token of the former address, and no other', function (): void {
+    Notification::fake();
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+    $otherUser = User::factory()->create();
+    Password::createToken($user);
+    Password::createToken($otherUser);
+
+    app(UpdateProfile::class)->handle($user, new ProfileData(name: 'Jane Doe', email: 'jane.smith@example.com'));
+
+    expect(DB::table('password_reset_tokens')->pluck('email')->all())->toBe([$otherUser->email]);
+});
+
+it('keeps the password reset token when the address stays the same', function (): void {
+    $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
+    Password::createToken($user);
+
+    app(UpdateProfile::class)->handle($user, new ProfileData(name: 'Jane Smith', email: 'jane@example.com'));
+
+    expect(DB::table('password_reset_tokens')->pluck('email')->all())->toBe(['jane@example.com']);
+});
