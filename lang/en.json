@@ -113,5 +113,8 @@
     "account.profile.description": "Update your name and email address.",
     "account.profile.name": "Name",
     "account.profile.email": "Email address",
-    "account.profile.save": "Save"
+    "account.profile.save": "Save",
+    "account.profile.unverified": "Your email address is unverified. Open the link we sent to it.",
+    "account.profile.resend": "Send the link again",
+    "account.verify_email.change_address": "Change your email address"
 }

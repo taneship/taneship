@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Actions\UpdateProfile;
+use App\Data\ProfileData;
 use App\Models\User;
 use App\Notifications\VerifyEmail;
 use Illuminate\Auth\Events\Verified;
@@ -86,6 +88,19 @@ it('refuses the link of another user or another address', function (Closure $lin
         'hash' => hash('sha256', 'former@example.com'),
     ]),
 ]);
+
+it('refuses a link sent to the former address', function (): void {
+    $user = User::factory()->unverified()->create(['email' => 'jane@example.com']);
+    $link = verificationLinkFor($user);
+
+    app(UpdateProfile::class)->handle($user, new ProfileData(name: $user->name, email: 'jane.smith@example.com'));
+
+    $this->actingAs($user)
+        ->get($link)
+        ->assertForbidden();
+
+    expect($user->refresh()->hasVerifiedEmail())->toBeFalse();
+});
 
 it('refuses a link whose signature does not match', function (): void {
     $user = User::factory()->unverified()->create();

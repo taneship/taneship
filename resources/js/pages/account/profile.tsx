@@ -7,6 +7,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { AccountLayout } from '@/layouts/account-layout';
 import { AppLayout } from '@/layouts/app-layout';
 import account from '@/routes/account';
+import verification from '@/routes/verification';
 import type { Profile } from '@/types/profile';
 
 type AccountProfileProps = {
@@ -14,7 +15,7 @@ type AccountProfileProps = {
     hasVerifiedEmail: boolean;
 };
 
-export default function AccountProfile({ profile }: AccountProfileProps) {
+export default function AccountProfile({ profile, hasVerifiedEmail }: AccountProfileProps) {
     const { translate } = useTranslation();
 
     return (
@@ -58,6 +59,18 @@ export default function AccountProfile({ profile }: AccountProfileProps) {
                         </FieldGroup>
                     )}
                 </Form>
+                {!hasVerifiedEmail && (
+                    <div className="flex flex-col gap-3 rounded-lg border p-4">
+                        <p className="text-sm">{translate('account.profile.unverified')}</p>
+                        <Form action={verification.send()} options={{ preserveScroll: true }}>
+                            {({ processing }) => (
+                                <Button type="submit" variant="outline" disabled={processing}>
+                                    {translate('account.profile.resend')}
+                                </Button>
+                            )}
+                        </Form>
+                    </div>
+                )}
             </section>
         </>
     );

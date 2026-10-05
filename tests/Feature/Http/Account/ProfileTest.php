@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia;
 
 it('renders the profile page for a signed-in user', function (): void {
@@ -66,6 +68,21 @@ it('saves the profile and leads back with a toast', function (): void {
         ->and($user->email)->toBe('jane.smith@example.com');
 });
 
+it('asks the new address to be verified', function (): void {
+    Notification::fake();
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    $this->actingAs($user)
+        ->put(route('account.profile.update'), ['name' => $user->name, 'email' => 'jane.smith@example.com'])
+        ->assertSessionHasNoErrors();
+
+    $this->get(route('account.profile.edit'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('hasVerifiedEmail', false));
+
+    Notification::assertSentToTimes($user, VerifyEmail::class);
+});
+
 it('shares the new name with the next page', function (): void {
     $user = User::factory()->create(['email' => 'jane@example.com']);
 
@@ -86,6 +103,7 @@ it('stores the address in lowercase', function (): void {
 });
 
 it('keeps the address of the user, whatever its case', function (string $email): void {
+    Notification::fake();
     $user = User::factory()->create(['email' => 'jane@example.com']);
 
     $this->actingAs($user)
@@ -93,7 +111,9 @@ it('keeps the address of the user, whatever its case', function (string $email):
         ->assertSessionHasNoErrors();
 
     expect($user->refresh()->name)->toBe('Jane Smith')
-        ->and($user->email)->toBe('jane@example.com');
+        ->and($user->email)->toBe('jane@example.com')
+        ->and($user->hasVerifiedEmail())->toBeTrue();
+    Notification::assertNothingSent();
 })->with(['same case' => 'jane@example.com', 'other case' => 'Jane@Example.COM']);
 
 it('refuses an address another user has, whatever its case', function (string $email): void {

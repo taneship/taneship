@@ -50,6 +50,16 @@ it('sends the link again', function (string $mode): void {
     Notification::assertSentToTimes($user, VerifyEmail::class);
 })->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
 
+it('leads to the profile page to change the address', function (): void {
+    $this->actingAs(User::factory()->unverified()->create());
+
+    visit(route('verification.notice'))
+        ->click(trans('account.verify_email.change_address'))
+        ->assertPathIs('/account/profile')
+        ->assertSee(trans('account.profile.unverified'))
+        ->assertNoSmoke();
+});
+
 it('signs out', function (): void {
     $this->actingAs(User::factory()->unverified()->create());
 

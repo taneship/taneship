@@ -5,6 +5,7 @@ import { Field, FieldGroup } from '@/components/ui/field';
 import { useTranslation } from '@/hooks/use-translation';
 import { AuthLayout } from '@/layouts/auth-layout';
 import { logout } from '@/routes';
+import account from '@/routes/account';
 import verification from '@/routes/verification';
 
 export default function AuthVerifyEmail() {
@@ -32,6 +33,12 @@ export default function AuthVerifyEmail() {
                     </FieldGroup>
                 )}
             </Form>
+            <Link
+                href={account.profile.edit()}
+                className="self-center text-sm font-medium underline underline-offset-4"
+            >
+                {translate('account.verify_email.change_address')}
+            </Link>
             <Link
                 href={logout()}
                 as="button"

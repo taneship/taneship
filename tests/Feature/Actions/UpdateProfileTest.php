@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Actions\UpdateProfile;
 use App\Data\ProfileData;
 use App\Models\User;
+use App\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Notification;
 
 it('saves the name and the address', function (): void {
     $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
@@ -22,3 +24,28 @@ it('stores the address in lowercase', function (): void {
 
     expect($user->refresh()->email)->toBe('jane@example.com');
 });
+
+it('clears the verification of a new address and sends it the link', function (): void {
+    Notification::fake();
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+
+    app(UpdateProfile::class)->handle($user, new ProfileData(name: 'Jane Doe', email: 'jane.smith@example.com'));
+
+    expect($user->refresh()->hasVerifiedEmail())->toBeFalse();
+    Notification::assertSentToTimes($user, VerifyEmail::class);
+    Notification::assertSentTo(
+        $user,
+        VerifyEmail::class,
+        fn (VerifyEmail $notification, array $channels, User $notifiable): bool => $notifiable->routeNotificationFor('mail') === 'jane.smith@example.com',
+    );
+});
+
+it('keeps the verification when the address stays the same', function (string $email): void {
+    Notification::fake();
+    $user = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
+
+    app(UpdateProfile::class)->handle($user, new ProfileData(name: 'Jane Smith', email: $email));
+
+    expect($user->refresh()->hasVerifiedEmail())->toBeTrue();
+    Notification::assertNothingSent();
+})->with(['same case' => 'jane@example.com', 'other case' => 'Jane@Example.COM']);

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Notification;
 
 it('renders the profile page', function (string $mode, bool $isDark): void {
     $this->actingAs(User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']));
@@ -19,6 +21,52 @@ it('renders the profile page', function (string $mode, bool $isDark): void {
         ->assertNoSmoke()
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
+
+it('renders the profile page of an unverified address', function (string $mode): void {
+    $this->actingAs(User::factory()->unverified()->create());
+
+    visit(route('account.profile.edit'))
+        ->{$mode}()
+        ->assertAttribute('#app', 'data-server-rendered', 'true')
+        ->assertSee(trans('account.profile.unverified'))
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
+
+it('sends the link again', function (string $mode): void {
+    Notification::fake();
+    $user = User::factory()->unverified()->create();
+
+    $this->actingAs($user);
+
+    visit(route('account.profile.edit'))
+        ->{$mode}()
+        ->press(trans('account.profile.resend'))
+        ->assertSee(trans('identity.verification.sent'))
+        // The toast fades in: axe would measure its contrast halfway.
+        ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+
+    Notification::assertSentToTimes($user, VerifyEmail::class);
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
+
+it('asks a new address to be verified', function (): void {
+    Notification::fake();
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    visit(route('account.profile.edit'))
+        ->assertDontSee(trans('account.profile.unverified'))
+        ->clear('email')
+        ->type('email', 'jane.smith@example.com')
+        ->press(trans('account.profile.save'))
+        ->assertSee(trans('account.profile.unverified'))
+        ->assertNoSmoke();
+
+    Notification::assertSentToTimes($user, VerifyEmail::class);
+});
 
 it('shows the error of an address already taken', function (string $mode): void {
     User::factory()->create(['email' => 'john@example.com']);
