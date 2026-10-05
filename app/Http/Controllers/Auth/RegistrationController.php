@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\RegisterUser;
+use App\Exceptions\EmailAlreadyTakenException;
 use App\Http\Requests\Auth\RegisterUserRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,7 +25,12 @@ final class RegistrationController
 
     public function store(RegisterUserRequest $request, RegisterUser $registerUser): RedirectResponse
     {
-        $user = $registerUser->handle($request->toData());
+        try {
+            $user = $registerUser->handle($request->toData());
+        } catch (EmailAlreadyTakenException) {
+            // The form request found the address free, and another request took it since: the answer is the rule's.
+            throw ValidationException::withMessages(['email' => __('validation.unique', ['attribute' => 'email'])]);
+        }
 
         Auth::login($user);
 

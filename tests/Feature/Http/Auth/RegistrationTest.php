@@ -95,6 +95,21 @@ it('refuses an address already taken, whatever its case', function (string $emai
     expect(User::query()->count())->toBe(1);
 })->with(['same case' => 'jane@example.com', 'other case' => 'Jane@Example.COM']);
 
+it('refuses an address that another request takes first, as one already taken', function (): void {
+    // The other request creates the account between the validation and the insert of this one.
+    User::creating(function (User $user): void {
+        User::withoutEvents(fn () => $user->replicate()->save());
+    });
+
+    // No query follows: PostgreSQL ends the transaction of the test at the refused insert.
+    $this->from(route('register'))
+        ->post(route('register.store'), signUpInput())
+        ->assertRedirect(route('register'))
+        ->assertSessionHasErrors(['email' => trans('validation.unique', ['attribute' => 'email'])]);
+
+    $this->assertGuest();
+});
+
 it('requires a password of 12 characters', function (): void {
     $this->post(route('register.store'), signUpInput([
         'password' => str_repeat('a', 11),
