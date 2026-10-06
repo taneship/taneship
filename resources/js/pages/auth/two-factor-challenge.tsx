@@ -43,7 +43,7 @@ export default function AuthTwoFactorChallenge() {
                             />
                         ) : (
                             <Field data-invalid={errors.code !== undefined}>
-                                <FieldLabel htmlFor="code">
+                                <FieldLabel htmlFor="code" className="justify-center">
                                     {translate('identity.two_factor_challenge.code')}
                                 </FieldLabel>
                                 <InputOTP
@@ -58,6 +58,7 @@ export default function AuthTwoFactorChallenge() {
                                     aria-describedby={
                                         errors.code === undefined ? undefined : 'code-error'
                                     }
+                                    containerClassName="mx-auto"
                                     required
                                 >
                                     <InputOTPGroup>
@@ -66,11 +67,14 @@ export default function AuthTwoFactorChallenge() {
                                                 key={index}
                                                 index={index}
                                                 aria-invalid={errors.code !== undefined}
+                                                className="size-11 text-base"
                                             />
                                         ))}
                                     </InputOTPGroup>
                                 </InputOTP>
-                                <FieldError id="code-error">{errors.code}</FieldError>
+                                <FieldError id="code-error" className="text-center text-balance">
+                                    {errors.code}
+                                </FieldError>
                             </Field>
                         )}
                         <Field>
