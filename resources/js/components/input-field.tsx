@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react';
 
+import { PasswordInput } from '@/components/password-input';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
@@ -11,7 +12,8 @@ type InputFieldProps = Omit<ComponentProps<typeof Input>, 'id' | 'name'> & {
 };
 
 // The name is also the id of the input, and names the error that describes it.
-export function InputField({ name, label, labelAction, error, ...props }: InputFieldProps) {
+// A password field gets a button that shows what is typed.
+export function InputField({ name, label, labelAction, error, type, ...props }: InputFieldProps) {
     const isInvalid = error !== undefined;
     const errorId = `${name}-error`;
 
@@ -25,13 +27,24 @@ export function InputField({ name, label, labelAction, error, ...props }: InputF
                     {labelAction}
                 </div>
             )}
-            <Input
-                id={name}
-                name={name}
-                aria-invalid={isInvalid}
-                aria-describedby={isInvalid ? errorId : undefined}
-                {...props}
-            />
+            {type === 'password' ? (
+                <PasswordInput
+                    id={name}
+                    name={name}
+                    aria-invalid={isInvalid}
+                    aria-describedby={isInvalid ? errorId : undefined}
+                    {...props}
+                />
+            ) : (
+                <Input
+                    id={name}
+                    name={name}
+                    type={type}
+                    aria-invalid={isInvalid}
+                    aria-describedby={isInvalid ? errorId : undefined}
+                    {...props}
+                />
+            )}
             <FieldError id={errorId}>{error}</FieldError>
         </Field>
     );

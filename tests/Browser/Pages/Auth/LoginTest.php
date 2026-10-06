@@ -48,6 +48,38 @@ it('shows the error of a wrong pair', function (string $mode): void {
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
 
+it('shows and hides the password', function (string $mode): void {
+    visit(route('login'))
+        ->{$mode}()
+        ->type('password', 'secret-password')
+        ->assertAttribute('#password', 'type', 'password')
+        ->assertAttribute('[aria-controls="password"]', 'aria-label', trans('identity.password_input.show'))
+        ->assertAttribute('[aria-controls="password"]', 'aria-pressed', 'false')
+        ->click('[aria-controls="password"]')
+        ->assertAttribute('#password', 'type', 'text')
+        ->assertAttribute('[aria-controls="password"]', 'aria-pressed', 'true')
+        ->assertValue('password', 'secret-password')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3)
+        ->click('[aria-controls="password"]')
+        ->assertAttribute('#password', 'type', 'password')
+        ->assertAttribute('[aria-controls="password"]', 'aria-pressed', 'false');
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
+
+it('hides the password again when the form is sent', function (): void {
+    $user = User::factory()->create();
+
+    visit(route('login'))
+        ->type('email', $user->email)
+        ->type('password', 'wrong-password')
+        ->click('[aria-controls="password"]')
+        ->assertAttribute('#password', 'type', 'text')
+        ->press('[type="submit"]')
+        ->assertSee(trans('auth.failed'))
+        ->assertAttribute('#password', 'type', 'password')
+        ->assertNoSmoke();
+});
+
 it('signs in, remembering the user when asked', function (): void {
     $user = User::factory()->create(['remember_token' => null]);
 
