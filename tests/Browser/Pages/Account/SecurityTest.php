@@ -152,6 +152,33 @@ it('renders a pending two-factor setup', function (string $mode, bool $isDark): 
         ->assertNoAccessibilityIssues(level: 3);
 })->with(['light mode' => ['inLightMode', false], 'dark mode' => ['inDarkMode', true]]);
 
+it('copies the setup key', function (string $mode): void {
+    $user = pendingTwoFactorUser();
+
+    $this->actingAs($user);
+
+    // The clipboard of a headless browser is not readable: the page writes into a stand-in.
+    confirmPassword(visit(route('account.security.edit'))->{$mode}())
+        ->assertScript('navigator.clipboard.writeText = async (text) => { window.copiedText = text; }; true')
+        ->press(trans('identity.security.two_factor_authentication.copy_setup_key'))
+        ->assertSee(trans('identity.security.two_factor_authentication.setup_key_copied'))
+        ->assertScript('window.copiedText', (string) $user->two_factor_secret)
+        // The toast fades in: axe would skip it, still transparent, or measure its contrast halfway.
+        ->assertScript('async () => { await Promise.all(document.getAnimations().map((animation) => animation.finished)); return true; }')
+        ->assertNoSmoke()
+        ->assertNoAccessibilityIssues(level: 3);
+})->with(['light mode' => 'inLightMode', 'dark mode' => 'inDarkMode']);
+
+it('says when the browser refuses to copy the setup key', function (): void {
+    $this->actingAs(pendingTwoFactorUser());
+
+    confirmPassword(visit(route('account.security.edit')))
+        ->assertScript('navigator.clipboard.writeText = async () => { throw new DOMException("Denied", "NotAllowedError"); }; true')
+        ->press(trans('identity.security.two_factor_authentication.copy_setup_key'))
+        ->assertSee(trans('identity.security.two_factor_authentication.setup_key_not_copied'))
+        ->assertNoSmoke();
+});
+
 it('renders two-factor authentication enabled', function (string $mode, bool $isDark): void {
     $this->actingAs(User::factory()->withTwoFactorAuthentication()->create());
 

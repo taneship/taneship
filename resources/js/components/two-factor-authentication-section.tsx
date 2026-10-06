@@ -1,7 +1,8 @@
 import { Form, router, usePage } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
-import { ShieldCheckIcon } from 'lucide-react';
+import { CopyIcon, ShieldCheckIcon } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -32,6 +33,20 @@ export function TwoFactorAuthenticationSection({
     const { errors } = usePage().props;
     const [code, setCode] = useState('');
     const [isCanceling, setIsCanceling] = useState(false);
+
+    // The clipboard is refused outside a secure context, or when the browser denies the permission.
+    async function copySetupKey(setupKey: string) {
+        try {
+            await navigator.clipboard.writeText(setupKey);
+            toast.success(
+                translate('identity.security.two_factor_authentication.setup_key_copied'),
+            );
+        } catch {
+            toast.error(
+                translate('identity.security.two_factor_authentication.setup_key_not_copied'),
+            );
+        }
+    }
 
     function cancelTwoFactorSetup() {
         router.delete(account.twoFactorAuthentication.destroy(), {
@@ -143,6 +158,18 @@ export function TwoFactorAuthenticationSection({
                             <code className="rounded-md bg-muted px-2 py-1 font-mono text-sm break-all select-all">
                                 {twoFactorSetup.setupKey}
                             </code>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="self-start"
+                                onClick={() => void copySetupKey(twoFactorSetup.setupKey)}
+                            >
+                                <CopyIcon data-icon="inline-start" />
+                                {translate(
+                                    'identity.security.two_factor_authentication.copy_setup_key',
+                                )}
+                            </Button>
                         </div>
                     </div>
                     <Form
