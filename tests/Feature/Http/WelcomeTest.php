@@ -13,6 +13,7 @@ it('renders the welcome page', function (): void {
             ->component('welcome')
             ->where('name', config('app.name'))
             ->where('errors', [])
+            ->where('direction', 'ltr')
             ->where('theme', 'system')
             ->where('isSidebarOpen', true)
             ->where('user', null)

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Data\UserData;
+use App\Enums\Direction;
 use App\Enums\Theme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -25,6 +26,7 @@ final class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => Config::string('app.name'),
+            'direction' => Direction::forLocale($locale),
             'theme' => ($user = $request->user()) === null ? Theme::System : $user->theme,
             'isSidebarOpen' => $request->cookie('sidebar_state') !== 'false',
             'user' => fn (): ?UserData => ($user = $request->user()) === null ? null : new UserData($user->name, $user->email),

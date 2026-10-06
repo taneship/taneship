@@ -49,12 +49,12 @@ export function UserMenu({ user }: UserMenuProps) {
                                 <span className="truncate font-medium">{user.name}</span>
                                 <span className="truncate text-xs">{user.email}</span>
                             </span>
-                            <ChevronsUpDownIcon className="ml-auto" />
+                            <ChevronsUpDownIcon className="ms-auto" />
                         </DropdownMenuTrigger>
                         {/* The popup stays in the nav: outside every landmark, it fails axe's region rule. */}
                         <DropdownMenuContent
                             container={navigationRef}
-                            side={isMobile ? 'bottom' : 'right'}
+                            side={isMobile ? 'bottom' : 'inline-end'}
                             align="end"
                             className="min-w-56"
                         >

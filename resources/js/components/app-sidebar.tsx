@@ -33,7 +33,7 @@ export function AppSidebar() {
     ];
 
     return (
-        <Sidebar collapsible="icon">
+        <Sidebar side={props.direction === 'rtl' ? 'right' : 'left'} collapsible="icon">
             <SidebarContent>
                 <nav aria-label={translate('foundation.sidebar.navigation')}>
                     <SidebarGroup>

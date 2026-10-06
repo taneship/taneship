@@ -1,3 +1,4 @@
+import { DirectionProvider } from '@base-ui/react/direction-provider';
 import { createInertiaApp, router } from '@inertiajs/react';
 import { toast } from 'sonner';
 
@@ -33,10 +34,11 @@ void createInertiaApp({
     title: (title, { props: { name } }) =>
         typeof name === 'string' ? `${title} - ${name}` : title,
     strictMode: true,
-    withApp: (app) => (
-        <>
+    // Called once, with the first page: the direction, like <html dir>, holds until the next full load.
+    withApp: (app, { page }) => (
+        <DirectionProvider direction={page.props.direction}>
             {app}
-            <Toaster />
-        </>
+            <Toaster dir={page.props.direction} />
+        </DirectionProvider>
     ),
 });

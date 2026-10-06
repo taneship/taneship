@@ -95,7 +95,7 @@ lang/
 └── en/validation.php           Laravel's own files: auth, pagination, passwords, validation
 resources/
 ├── css/app.css                 Design tokens (Tailwind, shadcn/ui)
-├── views/app.blade.php         Root template: language and theme of the first response
+├── views/app.blade.php         Root template: language, direction and theme of the first response
 └── js/
     ├── app.tsx                 Starts the Inertia app: titles, theme, toasts
     ├── pages/<area>/           Inertia pages, grouped by URL area
@@ -159,8 +159,9 @@ Everything else stays in Laravel's place:
 - A page that uses a layout declares it after its component, `Dashboard.layout = AppLayout;`, so the layout's code loads with that page only. `welcome` and `http-error` have none.
 - Every page sets its title with `<Head title={translate('<module>.<page>.title')} />`. The application name is appended. A page meant for search engines also sets a meta description; a page that must not be indexed carries `<meta name="robots" content="noindex" />`.
 - Pages render on the server first. Never read `window`, `document` or `localStorage` while rendering: do it in an effect or an event handler. A server render that fails fails its browser test.
-- Every page receives the shared props: `name`, `theme`, `isSidebarOpen`, `translations` and `errors`.
+- Every page receives the shared props: `name`, `direction`, `theme`, `isSidebarOpen`, `user`, `translations` and `errors`.
 - Style with the design tokens of `resources/css/app.css`, such as `bg-background`, `text-foreground`, `text-muted-foreground` and `border`. They hold in light and dark mode, where raw colors break the contrast rules. Dark mode is the `dark` class on `<html>`.
+- Every interface reads right to left as well: `<html dir>` follows the locale. Position with logical classes (`ms-*`, `pe-*`, `start-*`, `border-s`, `rounded-e-*`, `text-start`), never `ml-*`, `pr-*`, `left-*` or `text-left`. A `translate-x-*` gets its `rtl:` mirror, an icon that points along the line, such as a chevron or an arrow, takes `rtl:rotate-180`, and a popup opens on `inline-start` or `inline-end`, never `left` or `right`.
 - Add a shadcn/ui component with `npx shadcn@latest add <component>` when a page uses it, never in bulk. A package it installs stays only while a component in use needs it.
 - Forms are built with shadcn/ui's Field components: a `FieldGroup` holds the fields, and each `Field` holds a control, its `FieldLabel` and its `FieldError`. A field in error carries `data-invalid` on its `Field`, and `aria-invalid` and `aria-describedby`, naming its `FieldError`, on its control. `InputField`, in `components/input-field.tsx`, composes them for an input: it takes the name, the label, the error and the props of the input, and wires the rest. A checkbox sits in a horizontal `Field`, before its label.
 - A controller shows a toast by flashing it: `Inertia::flash('toast', ['type' => 'success', 'message' => __('billing.invoice_sent')]);`. The type is `success` or `error`, and the message is server text.

@@ -27,6 +27,6 @@ it('chooses a theme, signs out to the system theme and finds the theme again on 
         ->assertPathIs('/dashboard')
         ->assertScript("document.documentElement.classList.contains('dark')", true)
         // The class is in the server's response, before any script runs.
-        ->assertScript('async () => (await (await fetch("/dashboard")).text()).includes(\'<html lang="en" class="dark">\')', true)
+        ->assertScript('async () => (await (await fetch("/dashboard")).text()).includes(\'<html lang="en" dir="ltr" class="dark">\')', true)
         ->assertNoSmoke();
 });

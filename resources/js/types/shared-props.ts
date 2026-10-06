@@ -1,9 +1,11 @@
 import type { Translations } from '@/lib/translation';
+import type { Direction } from '@/types/direction';
 import type { Theme } from '@/types/theme';
 import type { User } from '@/types/user';
 
 export interface SharedProps {
     name: string;
+    direction: Direction;
     theme: Theme;
     isSidebarOpen: boolean;
     user: User | null;
