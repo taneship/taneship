@@ -8,8 +8,8 @@
     "require": {
         "php": "^8.5",
         "bacon/bacon-qr-code": "^3.1",
-        "inertiajs/inertia-laravel": "^3.4",
-        "laravel/framework": "^13.34",
+        "inertiajs/inertia-laravel": "^3.5",
+        "laravel/framework": "^13.35",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.21",
         "pragmarx/google2fa": "^9.1",
@@ -17,18 +17,18 @@
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.6",
-        "fakerphp/faker": "^1.23",
-        "larastan/larastan": "^3.12",
+        "fakerphp/faker": "^1.24",
+        "larastan/larastan": "^3.13",
         "laravel/boost": "^2.10",
-        "laravel/pail": "^1.2.5",
-        "laravel/pao": "^1.0.6",
-        "laravel/pint": "^1.27",
-        "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^5.2",
-        "pestphp/pest-plugin-browser": "^5.0",
+        "laravel/pail": "^1.2.7",
+        "laravel/pao": "^1.1.5",
+        "laravel/pint": "^1.32",
+        "nunomaduro/collision": "^8.9",
+        "pestphp/pest": "^5.3",
+        "pestphp/pest-plugin-browser": "^5.1",
         "pestphp/pest-plugin-laravel": "^5.0",
         "pestphp/pest-plugin-type-coverage": "^5.0",
-        "rector/rector": "^2.6"
+        "rector/rector": "^2.7"
     },
     "autoload": {
         "psr-4": {
