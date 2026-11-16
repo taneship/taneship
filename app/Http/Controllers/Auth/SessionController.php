@@ -51,7 +51,9 @@ final class SessionController
 
         $credentials = ['email' => $signIn->email, 'password' => $signIn->password];
 
-        if (! Auth::validate($credentials)) {
+        $user = Auth::validate($credentials) ? Auth::getLastAttempted() : null;
+
+        if (! $user instanceof User) {
             RateLimiter::hit($throttleKey);
 
             throw ValidationException::withMessages(['email' => __('auth.failed')]);
@@ -59,15 +61,13 @@ final class SessionController
 
         RateLimiter::clear($throttleKey);
 
-        $user = Auth::getLastAttempted();
-
         // Auth::attempt() would rehash too: stored hashes follow the hashing options as users sign in.
         if (Config::boolean('hashing.rehash_on_login')) {
             Auth::getProvider()->rehashPasswordIfRequired($user, $credentials);
         }
 
         // The password alone does not sign this user in: the challenge does, with what it keeps here.
-        if ($user instanceof User && $user->hasEnabledTwoFactorAuthentication()) {
+        if ($user->hasEnabledTwoFactorAuthentication()) {
             $request->session()->put('pending_sign_in', ['user_id' => $user->id, 'remember' => $signIn->remember]);
 
             return to_route('two-factor-challenge.create');
